@@ -24,7 +24,7 @@ namespace LoggingDecoratorGenerator
 
         foreach (var interfaceToGenerate in interfacesToGenerate)
         {
-            string className = $"{interfaceToGenerate.Interface.Name}LoggingDecorator";
+            string className = $"{interfaceToGenerate.Interface.Name.Substring(startIndex: 1)}LoggingDecorator";
             string interfaceFullName = $"{interfaceToGenerate.Interface}";
             string loggerType = $"Microsoft.Extensions.Logging.ILogger<{interfaceFullName}>";
 
