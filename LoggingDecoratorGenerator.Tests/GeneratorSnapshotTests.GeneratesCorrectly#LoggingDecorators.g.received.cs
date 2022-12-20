@@ -12,11 +12,15 @@ namespace LoggingDecoratorGenerator
             _decorated = decorated;
         }
         
+        private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, int, OtherFolder.OtherSubFolder.Person, Exception?> s_BeforeSomeMethod = Microsoft.Extensions.Logging.LoggerMessage.Define<int, OtherFolder.OtherSubFolder.Person>(Microsoft.Extensions.Logging.LogLevel.Information, 0, "Entering SomeMethod with parameters: x = {x}, person = {person}");
+        
         public void SomeMethod(int x, OtherFolder.OtherSubFolder.Person person)
         {
             _logger.LogInformation("Entering SomeMethod");
             _decorated.SomeMethod(x, person);
         }
+        
+        private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, int, int, Exception?> s_BeforeSomeAsyncMethod = Microsoft.Extensions.Logging.LoggerMessage.Define<int, int>(Microsoft.Extensions.Logging.LogLevel.Information, 0, "Entering SomeAsyncMethod with parameters: x = {x}, y = {y}");
         
         public System.Threading.Tasks.Task SomeAsyncMethod(int x, int y)
         {

@@ -24,7 +24,8 @@ namespace LoggingDecoratorGenerator
 
         foreach (var interfaceToGenerate in interfacesToGenerate)
         {
-            string className = $"{interfaceToGenerate.Interface.Name.Substring(startIndex: 1)}LoggingDecorator";
+            string interfaceName = interfaceToGenerate.Interface.Name;
+            string className = $"{(interfaceName[0] == 'I' ? interfaceName.Substring(1) : interfaceName)}LoggingDecorator";
             string interfaceFullName = $"{interfaceToGenerate.Interface}";
             string loggerType = $"Microsoft.Extensions.Logging.ILogger<{interfaceFullName}>";
 
@@ -44,6 +45,8 @@ namespace LoggingDecoratorGenerator
 
             foreach (IMethodSymbol method in interfaceToGenerate.Methods)
             {
+                writer.WriteLine();
+                AppendLoggerMessageDefine(writer, method);
                 writer.WriteLine();
                 AppendMethod(writer, method);
             }
@@ -92,5 +95,63 @@ namespace LoggingDecoratorGenerator
         writer.WriteLine(");");
         writer.Indent--;
         writer.WriteLine("}");
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="writer"></param>
+    /// <param name="method"></param>
+    /// <returns>Variable name of logger delegate.</returns>
+    private static string AppendLoggerMessageDefine(IndentedTextWriter writer, IMethodSymbol method)
+    {
+        writer.Write("private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, ");
+        for (int i = 0; i < method.Parameters.Length; i++)
+        {
+            IParameterSymbol parameter = method.Parameters[i];
+            writer.Write($"{parameter.Type}");
+            if (i < method.Parameters.Length - 1)
+            {
+                writer.Write(", ");
+            }
+        }
+        string loggerVariable = $"s_Before{method.Name}";
+        writer.Write($", Exception?> {loggerVariable} = Microsoft.Extensions.Logging.LoggerMessage.Define");
+        for (int i = 0; i < method.Parameters.Length; i++)
+        {
+            if (i == 0)
+            {
+                writer.Write("<");
+            }
+            IParameterSymbol parameter = method.Parameters[i];
+            writer.Write($"{parameter.Type}");
+            if (i < method.Parameters.Length - 1)
+            {
+                writer.Write(", ");
+            }
+            else if (i == method.Parameters.Length - 1)
+            {
+                writer.Write(">");
+            }
+        }
+        writer.Write($"(Microsoft.Extensions.Logging.LogLevel.Information, 0, \"Entering {method.Name}");
+        for (int i = 0; i < method.Parameters.Length; i++)
+        {
+            if (i == 0)
+            {
+                writer.Write(" with parameters: ");
+            }
+            IParameterSymbol parameter = method.Parameters[i];
+            writer.Write($"{parameter.Name} = {{{parameter.Name}}}");
+            if (i < method.Parameters.Length - 1)
+            {
+                writer.Write(", ");
+            }
+        }
+        writer.Write("\");");
+
+        writer.WriteLine();
+
+        return loggerVariable;
     }
 }
