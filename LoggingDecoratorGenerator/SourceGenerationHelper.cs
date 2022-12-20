@@ -46,9 +46,9 @@ namespace LoggingDecoratorGenerator
             foreach (IMethodSymbol method in interfaceToGenerate.Methods)
             {
                 writer.WriteLine();
-                AppendLoggerMessageDefine(writer, method);
+                string loggerDelegateVariable = AppendLoggerMessageDefine(writer, method);
                 writer.WriteLine();
-                AppendMethod(writer, method);
+                AppendMethod(writer, method, loggerDelegateVariable);
             }
 
             writer.Indent--;
@@ -62,7 +62,7 @@ namespace LoggingDecoratorGenerator
         return stringWriter.ToString();
     }
 
-    private static void AppendMethod(IndentedTextWriter writer, IMethodSymbol method)
+    private static void AppendMethod(IndentedTextWriter writer, IMethodSymbol method, string loggerDelegateVariable)
     {
         writer.Write($"public {method.ReturnType} {method.Name}(");
         for (int i = 0; i < method.Parameters.Length; i++)
@@ -77,7 +77,21 @@ namespace LoggingDecoratorGenerator
         writer.WriteLine(")");
         writer.WriteLine("{");
         writer.Indent++;
-        writer.WriteLine($"_logger.LogInformation(\"Entering {method.Name}\");");
+        writer.Write($"{loggerDelegateVariable}(_logger, ");
+        for (int i = 0; i < method.Parameters.Length; i++)
+        {
+            IParameterSymbol parameter = method.Parameters[i];
+            writer.Write($"{parameter.Name}");
+            if (i < method.Parameters.Length - 1)
+            {
+                writer.Write(", ");
+            }
+            else if (i == method.Parameters.Length - 1)
+            {
+                writer.Write(", ");
+            }
+        }
+        writer.WriteLine("null);");
         if (method.ReturnType.SpecialType != SpecialType.System_Void)
         {
             writer.Write("return ");
@@ -114,9 +128,13 @@ namespace LoggingDecoratorGenerator
             {
                 writer.Write(", ");
             }
+            else if (i == method.Parameters.Length - 1)
+            {
+                writer.Write(", ");
+            }
         }
         string loggerVariable = $"s_Before{method.Name}";
-        writer.Write($", Exception?> {loggerVariable} = Microsoft.Extensions.Logging.LoggerMessage.Define");
+        writer.Write($"Exception?> {loggerVariable} = Microsoft.Extensions.Logging.LoggerMessage.Define");
         for (int i = 0; i < method.Parameters.Length; i++)
         {
             if (i == 0)

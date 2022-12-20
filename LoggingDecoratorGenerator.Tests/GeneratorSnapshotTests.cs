@@ -19,9 +19,11 @@ namespace SomeFolder.SomeSubFolder
     [Decorate]
     public interface ISomeService
     {
-        void SomeMethod(int x, Person person);
+        void ParameterlessMethod();
 
-        Task SomeAsyncMethod(int x, int y);
+        void VoidReturningMethod(int x, Person person);
+
+        Task TaskReturningAsyncMethod(int x, int y);
     }
 }
 
