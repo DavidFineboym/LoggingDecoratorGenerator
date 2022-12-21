@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using System.CodeDom.Compiler;
 
 namespace LoggingDecoratorGenerator;
@@ -29,7 +30,7 @@ namespace LoggingDecoratorGenerator
             string interfaceFullName = $"{interfaceToGenerate.Interface}";
             string loggerType = $"Microsoft.Extensions.Logging.ILogger<{interfaceFullName}>";
 
-            writer.WriteLine($"public sealed class {className} : {interfaceFullName}");
+            writer.WriteLine($"{SyntaxFacts.GetText(interfaceToGenerate.Interface.DeclaredAccessibility)} sealed class {className} : {interfaceFullName}");
             writer.WriteLine("{");
             writer.Indent++;
             writer.WriteLine($"private readonly {loggerType} _logger;");
