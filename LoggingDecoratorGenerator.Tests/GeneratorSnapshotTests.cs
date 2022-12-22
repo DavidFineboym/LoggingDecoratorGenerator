@@ -19,11 +19,17 @@ namespace SomeFolder.SomeSubFolder
     [DecorateWithLogger]
     public interface ISomeService
     {
-        void ParameterlessMethod();
+        void VoidParameterlessMethod();
 
-        void VoidReturningMethod(int x, Person person);
+        int IntReturningMethod(int x, Person person);
 
         Task TaskReturningAsyncMethod(int x, int y);
+
+        Task<int> TaskIntReturningAsyncMethod(int x, int y);
+
+        ValueTask ValueTaskReturningAsyncMethod(int x, int y);
+
+        ValueTask<float> ValueTaskFloatReturningAsyncMethod(int x, int y);
     }
 }
 

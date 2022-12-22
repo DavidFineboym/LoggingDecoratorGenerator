@@ -12,28 +12,55 @@ namespace SomeFolder.SomeSubFolder
             _decorated = decorated;
         }
         
-        private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, Exception?> s_beforeParameterlessMethod = Microsoft.Extensions.Logging.LoggerMessage.Define(Microsoft.Extensions.Logging.LogLevel.Information, 0, "Entering ParameterlessMethod");
+        private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, Exception?> s_beforeVoidParameterlessMethod = Microsoft.Extensions.Logging.LoggerMessage.Define(Microsoft.Extensions.Logging.LogLevel.Information, 0, "Entering VoidParameterlessMethod");
         
-        public void ParameterlessMethod()
+        public void VoidParameterlessMethod()
         {
-            s_beforeParameterlessMethod(_logger, null);
-            _decorated.ParameterlessMethod();
+            s_beforeVoidParameterlessMethod(_logger, null);
+            _decorated.VoidParameterlessMethod();
         }
         
-        private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, int, OtherFolder.OtherSubFolder.Person, Exception?> s_beforeVoidReturningMethod = Microsoft.Extensions.Logging.LoggerMessage.Define<int, OtherFolder.OtherSubFolder.Person>(Microsoft.Extensions.Logging.LogLevel.Information, 0, "Entering VoidReturningMethod with parameters: x = {x}, person = {person}");
+        private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, int, OtherFolder.OtherSubFolder.Person, Exception?> s_beforeIntReturningMethod = Microsoft.Extensions.Logging.LoggerMessage.Define<int, OtherFolder.OtherSubFolder.Person>(Microsoft.Extensions.Logging.LogLevel.Information, 0, "Entering IntReturningMethod with parameters: x = {x}, person = {person}");
         
-        public void VoidReturningMethod(int x, OtherFolder.OtherSubFolder.Person person)
+        public int IntReturningMethod(int x, OtherFolder.OtherSubFolder.Person person)
         {
-            s_beforeVoidReturningMethod(_logger, x, person, null);
-            _decorated.VoidReturningMethod(x, person);
+            s_beforeIntReturningMethod(_logger, x, person, null);
+            var result = _decorated.IntReturningMethod(x, person);
+            return result;
         }
         
         private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, int, int, Exception?> s_beforeTaskReturningAsyncMethod = Microsoft.Extensions.Logging.LoggerMessage.Define<int, int>(Microsoft.Extensions.Logging.LogLevel.Information, 0, "Entering TaskReturningAsyncMethod with parameters: x = {x}, y = {y}");
         
-        public System.Threading.Tasks.Task TaskReturningAsyncMethod(int x, int y)
+        public async System.Threading.Tasks.Task TaskReturningAsyncMethod(int x, int y)
         {
             s_beforeTaskReturningAsyncMethod(_logger, x, y, null);
-            return _decorated.TaskReturningAsyncMethod(x, y);
+            await _decorated.TaskReturningAsyncMethod(x, y);
+        }
+        
+        private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, int, int, Exception?> s_beforeTaskIntReturningAsyncMethod = Microsoft.Extensions.Logging.LoggerMessage.Define<int, int>(Microsoft.Extensions.Logging.LogLevel.Information, 0, "Entering TaskIntReturningAsyncMethod with parameters: x = {x}, y = {y}");
+        
+        public async System.Threading.Tasks.Task<int> TaskIntReturningAsyncMethod(int x, int y)
+        {
+            s_beforeTaskIntReturningAsyncMethod(_logger, x, y, null);
+            var result = await _decorated.TaskIntReturningAsyncMethod(x, y);
+            return result;
+        }
+        
+        private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, int, int, Exception?> s_beforeValueTaskReturningAsyncMethod = Microsoft.Extensions.Logging.LoggerMessage.Define<int, int>(Microsoft.Extensions.Logging.LogLevel.Information, 0, "Entering ValueTaskReturningAsyncMethod with parameters: x = {x}, y = {y}");
+        
+        public async System.Threading.Tasks.ValueTask ValueTaskReturningAsyncMethod(int x, int y)
+        {
+            s_beforeValueTaskReturningAsyncMethod(_logger, x, y, null);
+            await _decorated.ValueTaskReturningAsyncMethod(x, y);
+        }
+        
+        private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, int, int, Exception?> s_beforeValueTaskFloatReturningAsyncMethod = Microsoft.Extensions.Logging.LoggerMessage.Define<int, int>(Microsoft.Extensions.Logging.LogLevel.Information, 0, "Entering ValueTaskFloatReturningAsyncMethod with parameters: x = {x}, y = {y}");
+        
+        public async System.Threading.Tasks.ValueTask<float> ValueTaskFloatReturningAsyncMethod(int x, int y)
+        {
+            s_beforeValueTaskFloatReturningAsyncMethod(_logger, x, y, null);
+            var result = await _decorated.ValueTaskFloatReturningAsyncMethod(x, y);
+            return result;
         }
     }
 }

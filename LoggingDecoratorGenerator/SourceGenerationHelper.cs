@@ -18,6 +18,7 @@ namespace Fineboym.Logging.Generator
 
     public static (string className, string source) GenerateLoggingDecoratorClass(InterfaceToGenerate interfaceToGenerate)
     {
+        // TODO : Check generic interfaces and also generic methods in interfaces
         using StringWriter stringWriter = new();
         using IndentedTextWriter writer = new(stringWriter, "    ");
         string nameSpace = GetNamespace(interfaceToGenerate.InterfaceDeclarationSyntax);
@@ -109,7 +110,8 @@ namespace Fineboym.Logging.Generator
 
     private static void AppendMethod(IndentedTextWriter writer, IMethodSymbol method, string loggerDelegateVariable)
     {
-        writer.Write($"public {method.ReturnType} {method.Name}(");
+        (bool awaitable, bool hasReturnValue) = CheckReturnType(method.ReturnType);
+        writer.Write($"public {(awaitable ? "async " : string.Empty)}{method.ReturnType} {method.Name}(");
         for (int i = 0; i < method.Parameters.Length; i++)
         {
             IParameterSymbol parameter = method.Parameters[i];
@@ -137,9 +139,14 @@ namespace Fineboym.Logging.Generator
             }
         }
         writer.WriteLine("null);");
-        if (method.ReturnType.SpecialType != SpecialType.System_Void)
+        if (hasReturnValue)
         {
-            writer.Write("return ");
+            writer.Write("var result = ");
+        }
+
+        if (awaitable)
+        {
+            writer.Write("await ");
         }
         writer.Write($"_decorated.{method.Name}(");
         for (int i = 0; i < method.Parameters.Length; i++)
@@ -152,8 +159,42 @@ namespace Fineboym.Logging.Generator
             }
         }
         writer.WriteLine(");");
+        if (hasReturnValue)
+        {
+            writer.WriteLine("return result;");
+        }
         writer.Indent--;
         writer.WriteLine("}");
+    }
+
+    private static (bool awaitable, bool hasReturnValue) CheckReturnType(ITypeSymbol methodReturnType)
+    {
+        IMethodSymbol? getAwaiterMethodCandidate = methodReturnType.GetMembers(name: "GetAwaiter")
+            .OfType<IMethodSymbol>()
+            .SingleOrDefault(static method => method.DeclaredAccessibility == Accessibility.Public
+                                              && !method.IsAbstract
+                                              && !method.IsStatic
+                                              && method.Parameters.IsEmpty
+                                              && method.TypeParameters.IsEmpty);
+
+        if (getAwaiterMethodCandidate == null)
+        {
+            return (false, methodReturnType.SpecialType != SpecialType.System_Void);
+        }
+
+        string returnTypeFullName = getAwaiterMethodCandidate.ReturnType.OriginalDefinition.ToString();
+
+        if (returnTypeFullName is "System.Runtime.CompilerServices.TaskAwaiter" or "System.Runtime.CompilerServices.ValueTaskAwaiter")
+        {
+            return (true, false);
+        }
+
+        if (returnTypeFullName is "System.Runtime.CompilerServices.TaskAwaiter<TResult>" or "System.Runtime.CompilerServices.ValueTaskAwaiter<TResult>")
+        {
+            return (true, true);
+        }
+
+        return (false, methodReturnType.SpecialType != SpecialType.System_Void);
     }
 
     /// <summary>
