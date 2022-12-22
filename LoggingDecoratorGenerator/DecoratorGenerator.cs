@@ -9,7 +9,7 @@ namespace LoggingDecoratorGenerator;
 [Generator]
 public class DecoratorGenerator : IIncrementalGenerator
 {
-    private const string DecorateAttributeFullName = "LoggingDecoratorGenerator.DecorateAttribute";
+    private const string DecorateAttributeFullName = "Fineboym.Logging.Generator.DecorateAttribute";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -81,10 +81,10 @@ public class DecoratorGenerator : IIncrementalGenerator
         // Convert each InterfaceDeclarationSyntax to an InterfaceToGenerate
         List<InterfaceToGenerate> interfacesToGenerate = GetTypesToGenerate(compilation, distinctInterfaces, context.CancellationToken);
 
-        if (interfacesToGenerate.Count > 0)
+        foreach (var interfaceToGenerate in interfacesToGenerate)
         {
-            string result = SourceGenerationHelper.GenerateLoggingDecoratorsClass(interfacesToGenerate);
-            context.AddSource(hintName: "LoggingDecorators.g.cs", sourceText: SourceText.From(text: result, encoding: Encoding.UTF8));
+            (string className, string source) = SourceGenerationHelper.GenerateLoggingDecoratorClass(interfaceToGenerate);
+            context.AddSource(hintName: $"{className}.g.cs", sourceText: SourceText.From(text: source, encoding: Encoding.UTF8));
         }
     }
 
@@ -135,7 +135,7 @@ public class DecoratorGenerator : IIncrementalGenerator
             }
 
             // Create an InterfaceToGenerate for use in the generation phase
-            interfacesToGenerate.Add(new InterfaceToGenerate(interfaceSymbol, members));
+            interfacesToGenerate.Add(new InterfaceToGenerate(interfaceSymbol, members, interfaceDeclarationSyntax));
         }
 
         return interfacesToGenerate;

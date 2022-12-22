@@ -10,7 +10,7 @@ public class GeneratorSnapshotTests
         var source = @"
 using System;
 using System.Threading.Tasks;
-using LoggingDecoratorGenerator;
+using Fineboym.Logging.Generator;
 
 namespace SomeFolder.SomeSubFolder
 {

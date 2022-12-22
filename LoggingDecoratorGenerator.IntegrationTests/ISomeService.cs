@@ -1,4 +1,6 @@
-﻿namespace LoggingDecoratorGenerator.IntegrationTests;
+﻿using Fineboym.Logging.Generator;
+
+namespace LoggingDecoratorGenerator.IntegrationTests;
 
 [Decorate]
 public interface ISomeService
