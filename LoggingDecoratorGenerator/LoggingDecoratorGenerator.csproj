@@ -10,6 +10,10 @@
     <ImplicitUsings>true</ImplicitUsings>
     <LangVersion>Latest</LangVersion>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <Version>0.1.0-beta</Version>
+    <Authors>dfineboym</Authors>
+    <Company>dfineboym</Company>
   </PropertyGroup>
 
   <!-- The following libraries include the source generator interfaces and types we need -->

@@ -11,7 +11,7 @@ public static class SourceGenerationHelper
 namespace Fineboym.Logging.Generator
 {
     [System.AttributeUsage(System.AttributeTargets.Interface, AllowMultiple = false, Inherited = false)]
-    public class DecorateWithLoggerAttribute : System.Attribute
+    internal class DecorateWithLoggerAttribute : System.Attribute
     {
     }
 }";
