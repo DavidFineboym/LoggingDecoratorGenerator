@@ -2,7 +2,7 @@
 
 namespace LoggingDecoratorGenerator.IntegrationTests;
 
-[Decorate]
+[DecorateWithLogger]
 public interface ISomeService
 {
     DateTime DateTimeReturningMethod(DateTime dateTime);

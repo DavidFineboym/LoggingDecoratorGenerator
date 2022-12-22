@@ -16,7 +16,7 @@ namespace SomeFolder.SomeSubFolder
 {
     using OtherFolder.OtherSubFolder;
 
-    [Decorate]
+    [DecorateWithLogger]
     public interface ISomeService
     {
         void ParameterlessMethod();

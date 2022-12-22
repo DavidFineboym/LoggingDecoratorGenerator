@@ -9,20 +9,20 @@ namespace LoggingDecoratorGenerator;
 [Generator]
 public class DecoratorGenerator : IIncrementalGenerator
 {
-    private const string DecorateAttributeFullName = "Fineboym.Logging.Generator.DecorateAttribute";
+    private const string DecorateAttributeFullName = "Fineboym.Logging.Generator.DecorateWithLoggerAttribute";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Add the marker attribute to the compilation
         context.RegisterPostInitializationOutput(static ctx => ctx.AddSource(
-            hintName: "DecorateAttribute.g.cs",
+            hintName: "DecorateWithLoggerAttribute.g.cs",
             sourceText: SourceText.From(text: SourceGenerationHelper.Attribute, encoding: Encoding.UTF8)));
 
         // Do a simple filter for interfaces
         IncrementalValuesProvider<InterfaceDeclarationSyntax> interfaceDeclarations = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (s, _) => IsSyntaxTargetForGeneration(s), // select interfaces with attributes
-                transform: static (ctx, _) => GetSemanticTargetForGeneration(ctx)) // select the interface with the [Decorate] attribute
+                transform: static (ctx, _) => GetSemanticTargetForGeneration(ctx)) // select the interface with the [DecorateWithLogger] attribute
             .Where(predicate: static m => m is not null)!; // filter out attributed interfaces that we don't care about
 
         // Combine the selected interfaces with the `Compilation`
@@ -55,7 +55,6 @@ public class DecoratorGenerator : IIncrementalGenerator
                 INamedTypeSymbol attributeContainingTypeSymbol = attributeSymbol.ContainingType;
                 string fullName = attributeContainingTypeSymbol.ToDisplayString();
 
-                // Is the attribute the [Decorate] attribute?
                 if (fullName == DecorateAttributeFullName)
                 {
                     return interfaceDeclarationSyntax;
