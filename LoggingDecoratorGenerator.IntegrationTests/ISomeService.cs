@@ -6,4 +6,6 @@ namespace LoggingDecoratorGenerator.IntegrationTests;
 public interface ISomeService
 {
     DateTime DateTimeReturningMethod(DateTime dateTime);
+
+    Task<string?> StringReturningAsyncMethod(string? s);
 }

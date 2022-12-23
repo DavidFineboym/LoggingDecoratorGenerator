@@ -21,6 +21,8 @@ namespace Fineboym.Logging.Generator
         // TODO : Check generic interfaces and also generic methods in interfaces
         using StringWriter stringWriter = new();
         using IndentedTextWriter writer = new(stringWriter, "    ");
+        writer.WriteLine("#nullable enable");
+        writer.WriteLine();
         string nameSpace = GetNamespace(interfaceToGenerate.InterfaceDeclarationSyntax);
         writer.WriteLine($"namespace {nameSpace}");
         writer.WriteLine("{");
@@ -220,7 +222,7 @@ namespace Fineboym.Logging.Generator
             }
         }
         string loggerVariable = $"s_before{method.Name}";
-        writer.Write($"Exception?> {loggerVariable} = Microsoft.Extensions.Logging.LoggerMessage.Define");
+        writer.Write($"System.Exception?> {loggerVariable} = Microsoft.Extensions.Logging.LoggerMessage.Define");
         for (int i = 0; i < method.Parameters.Length; i++)
         {
             if (i == 0)

@@ -14,6 +14,8 @@
     <Version>0.1.0-beta</Version>
     <Authors>dfineboym</Authors>
     <Company>dfineboym</Company>
+    <EnableNETAnalyzers>True</EnableNETAnalyzers>
+    <AnalysisLevel>preview-all</AnalysisLevel>
   </PropertyGroup>
 
   <!-- The following libraries include the source generator interfaces and types we need -->
