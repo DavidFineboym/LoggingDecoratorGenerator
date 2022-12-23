@@ -3,9 +3,9 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.CodeDom.Compiler;
 
-namespace LoggingDecoratorGenerator;
+namespace Fineboym.Logging.Generator;
 
-public static class SourceGenerationHelper
+internal static class SourceGenerationHelper
 {
     public const string Attribute = @"
 namespace Fineboym.Logging.Generator

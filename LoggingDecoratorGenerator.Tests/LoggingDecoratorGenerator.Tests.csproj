@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LoggingDecoratorGenerator\LoggingDecoratorGenerator.csproj" />
+    <ProjectReference Include="..\LoggingDecoratorGenerator\Fineboym.Logging.Generator.csproj" />
   </ItemGroup>
 
 </Project>

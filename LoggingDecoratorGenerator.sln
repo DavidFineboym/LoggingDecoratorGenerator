@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33209.295
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoggingDecoratorGenerator", "LoggingDecoratorGenerator\LoggingDecoratorGenerator.csproj", "{AA0CEEFA-7EA0-43A4-B04C-FD299A9EB00C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fineboym.Logging.Generator", "LoggingDecoratorGenerator\Fineboym.Logging.Generator.csproj", "{AA0CEEFA-7EA0-43A4-B04C-FD299A9EB00C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoggingDecoratorGenerator.Tests", "LoggingDecoratorGenerator.Tests\LoggingDecoratorGenerator.Tests.csproj", "{CA980B33-06CB-4471-8100-6958024B5185}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoggingDecoratorGenerator.IntegrationTests", "LoggingDecoratorGenerator.IntegrationTests\LoggingDecoratorGenerator.IntegrationTests.csproj", "{2DE18598-A5D9-4A34-818A-9680890571C8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoggingDecoratorGenerator.IntegrationTests", "LoggingDecoratorGenerator.IntegrationTests\LoggingDecoratorGenerator.IntegrationTests.csproj", "{2DE18598-A5D9-4A34-818A-9680890571C8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

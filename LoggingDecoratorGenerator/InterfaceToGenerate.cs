@@ -1,9 +1,9 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace LoggingDecoratorGenerator;
+namespace Fineboym.Logging.Generator;
 
-public class InterfaceToGenerate
+internal class InterfaceToGenerate
 {
     public INamedTypeSymbol Interface { get; }
 

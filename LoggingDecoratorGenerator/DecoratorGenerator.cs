@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.Text;
 using System.Collections.Immutable;
 using System.Text;
 
-namespace LoggingDecoratorGenerator;
+namespace Fineboym.Logging.Generator;
 
 [Generator]
 public class DecoratorGenerator : IIncrementalGenerator
