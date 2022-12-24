@@ -8,7 +8,7 @@ internal class InterfaceToGenerate
 {
     public INamedTypeSymbol Interface { get; }
 
-    public List<(IMethodSymbol method, bool awaitable, bool hasReturnValue)> Methods { get; }
+    public List<MethodToGenerate> Methods { get; }
 
     public InterfaceDeclarationSyntax InterfaceDeclarationSyntax { get; }
 
@@ -17,7 +17,7 @@ internal class InterfaceToGenerate
     public InterfaceToGenerate(INamedTypeSymbol interfaceSymbol, InterfaceDeclarationSyntax interfaceDeclarationSyntax)
     {
         Interface = interfaceSymbol;
-        Methods = new();
+        Methods = new List<MethodToGenerate>();
         InterfaceDeclarationSyntax = interfaceDeclarationSyntax;
         Namespace = GetNamespace(interfaceDeclarationSyntax);
 
@@ -28,8 +28,7 @@ internal class InterfaceToGenerate
         {
             if (member is IMethodSymbol method && !method.IsStatic && method.MethodKind == MethodKind.Ordinary)
             {
-                (bool awaitable, bool hasReturnValue) = CheckReturnType(method.ReturnType);
-                Methods.Add((method, awaitable, hasReturnValue));
+                Methods.Add(new MethodToGenerate(method));
             }
         }
     }
@@ -77,35 +76,5 @@ internal class InterfaceToGenerate
 
         // return the final namespace
         return nameSpace;
-    }
-
-    private static (bool awaitable, bool hasReturnValue) CheckReturnType(ITypeSymbol methodReturnType)
-    {
-        IMethodSymbol? getAwaiterMethodCandidate = methodReturnType.GetMembers(name: "GetAwaiter")
-            .OfType<IMethodSymbol>()
-            .SingleOrDefault(static method => method.DeclaredAccessibility == Accessibility.Public
-                                              && !method.IsAbstract
-                                              && !method.IsStatic
-                                              && method.Parameters.IsEmpty
-                                              && method.TypeParameters.IsEmpty);
-
-        if (getAwaiterMethodCandidate == null)
-        {
-            return (false, methodReturnType.SpecialType != SpecialType.System_Void);
-        }
-
-        string returnTypeFullName = getAwaiterMethodCandidate.ReturnType.OriginalDefinition.ToString();
-
-        if (returnTypeFullName is "System.Runtime.CompilerServices.TaskAwaiter" or "System.Runtime.CompilerServices.ValueTaskAwaiter")
-        {
-            return (true, false);
-        }
-
-        if (returnTypeFullName is "System.Runtime.CompilerServices.TaskAwaiter<TResult>" or "System.Runtime.CompilerServices.ValueTaskAwaiter<TResult>")
-        {
-            return (true, true);
-        }
-
-        return (false, methodReturnType.SpecialType != SpecialType.System_Void);
     }
 }
