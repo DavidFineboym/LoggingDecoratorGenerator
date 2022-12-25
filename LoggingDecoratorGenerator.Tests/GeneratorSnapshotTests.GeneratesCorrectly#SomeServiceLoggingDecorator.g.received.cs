@@ -21,6 +21,7 @@ namespace SomeFolder.SomeSubFolder
         {
             s_beforeVoidParameterlessMethod(_logger, null);
             _decorated.VoidParameterlessMethod();
+            s_afterVoidParameterlessMethod(_logger, null);
         }
         
         private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, int, OtherFolder.OtherSubFolder.Person, System.Exception?> s_beforeIntReturningMethod = Microsoft.Extensions.Logging.LoggerMessage.Define<int, OtherFolder.OtherSubFolder.Person>(Microsoft.Extensions.Logging.LogLevel.Information, 0, "Entering IntReturningMethod with parameters: x = {x}, person = {person}");
@@ -30,6 +31,7 @@ namespace SomeFolder.SomeSubFolder
         {
             s_beforeIntReturningMethod(_logger, x, person, null);
             var result = _decorated.IntReturningMethod(x, person);
+            s_afterIntReturningMethod(_logger, result, null);
             return result;
         }
         
@@ -40,15 +42,17 @@ namespace SomeFolder.SomeSubFolder
         {
             s_beforeTaskReturningAsyncMethod(_logger, x, y, null);
             await _decorated.TaskReturningAsyncMethod(x, y);
+            s_afterTaskReturningAsyncMethod(_logger, null);
         }
         
         private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, int, int, System.Exception?> s_beforeTaskIntReturningAsyncMethod = Microsoft.Extensions.Logging.LoggerMessage.Define<int, int>(Microsoft.Extensions.Logging.LogLevel.Information, 0, "Entering TaskIntReturningAsyncMethod with parameters: x = {x}, y = {y}");
-        private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, System.Threading.Tasks.Task<int>, System.Exception?> s_afterTaskIntReturningAsyncMethod = Microsoft.Extensions.Logging.LoggerMessage.Define<System.Threading.Tasks.Task<int>>(Microsoft.Extensions.Logging.LogLevel.Information, 0, "Method TaskIntReturningAsyncMethod returned. Result = {result}");
+        private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, int, System.Exception?> s_afterTaskIntReturningAsyncMethod = Microsoft.Extensions.Logging.LoggerMessage.Define<int>(Microsoft.Extensions.Logging.LogLevel.Information, 0, "Method TaskIntReturningAsyncMethod returned. Result = {result}");
         
         public async System.Threading.Tasks.Task<int> TaskIntReturningAsyncMethod(int x, int y)
         {
             s_beforeTaskIntReturningAsyncMethod(_logger, x, y, null);
             var result = await _decorated.TaskIntReturningAsyncMethod(x, y);
+            s_afterTaskIntReturningAsyncMethod(_logger, result, null);
             return result;
         }
         
@@ -59,15 +63,17 @@ namespace SomeFolder.SomeSubFolder
         {
             s_beforeValueTaskReturningAsyncMethod(_logger, x, y, null);
             await _decorated.ValueTaskReturningAsyncMethod(x, y);
+            s_afterValueTaskReturningAsyncMethod(_logger, null);
         }
         
         private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, int, int, System.Exception?> s_beforeValueTaskFloatReturningAsyncMethod = Microsoft.Extensions.Logging.LoggerMessage.Define<int, int>(Microsoft.Extensions.Logging.LogLevel.Information, 0, "Entering ValueTaskFloatReturningAsyncMethod with parameters: x = {x}, y = {y}");
-        private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, System.Threading.Tasks.ValueTask<float>, System.Exception?> s_afterValueTaskFloatReturningAsyncMethod = Microsoft.Extensions.Logging.LoggerMessage.Define<System.Threading.Tasks.ValueTask<float>>(Microsoft.Extensions.Logging.LogLevel.Information, 0, "Method ValueTaskFloatReturningAsyncMethod returned. Result = {result}");
+        private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, float, System.Exception?> s_afterValueTaskFloatReturningAsyncMethod = Microsoft.Extensions.Logging.LoggerMessage.Define<float>(Microsoft.Extensions.Logging.LogLevel.Information, 0, "Method ValueTaskFloatReturningAsyncMethod returned. Result = {result}");
         
         public async System.Threading.Tasks.ValueTask<float> ValueTaskFloatReturningAsyncMethod(int x, int y)
         {
             s_beforeValueTaskFloatReturningAsyncMethod(_logger, x, y, null);
             var result = await _decorated.ValueTaskFloatReturningAsyncMethod(x, y);
+            s_afterValueTaskFloatReturningAsyncMethod(_logger, result, null);
             return result;
         }
     }

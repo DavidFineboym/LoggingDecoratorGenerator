@@ -51,7 +51,7 @@ namespace Fineboym.Logging.Generator
             string loggerDelegateBeforeVariable = AppendLoggerMessageDefineForBeforeCall(writer, methodToGenerate.MethodSymbol);
             string loggerDelegateAfterVariable = AppendLoggerMessageDefineForAfterCall(writer, methodToGenerate);
             writer.WriteLine();
-            AppendMethod(writer, methodToGenerate, loggerDelegateBeforeVariable);
+            AppendMethod(writer, methodToGenerate, loggerDelegateBeforeVariable, loggerDelegateAfterVariable);
         }
 
         writer.Indent--;
@@ -64,7 +64,7 @@ namespace Fineboym.Logging.Generator
         return (className, stringWriter.ToString());
     }
 
-    private static void AppendMethod(IndentedTextWriter writer, MethodToGenerate methodToGenerate, string loggerDelegateBeforeVariable)
+    private static void AppendMethod(IndentedTextWriter writer, MethodToGenerate methodToGenerate, string loggerDelegateBeforeVariable, string loggerDelegateAfterVariable)
     {
         IMethodSymbol method = methodToGenerate.MethodSymbol;
         bool awaitable = methodToGenerate.Awaitable;
@@ -118,9 +118,15 @@ namespace Fineboym.Logging.Generator
             }
         }
         writer.WriteLine(");");
+        writer.Write($"{loggerDelegateAfterVariable}(_logger, ");
         if (hasReturnValue)
         {
+            writer.WriteLine("result, null);");
             writer.WriteLine("return result;");
+        }
+        else
+        {
+            writer.WriteLine("null);");
         }
         writer.Indent--;
         writer.WriteLine("}");
@@ -159,9 +165,13 @@ namespace Fineboym.Logging.Generator
     {
         IMethodSymbol method = methodToGenerate.MethodSymbol;
         bool hasReturnValue = methodToGenerate.HasReturnValue;
+        bool awaitable = methodToGenerate.Awaitable;
 
         string loggerVariable = $"s_after{method.Name}";
-        AppendLoggerMessageDefineUpToFormatString(writer, hasReturnValue ? new[] { method.ReturnType } : Array.Empty<ITypeSymbol>(), loggerVariable);
+        AppendLoggerMessageDefineUpToFormatString(
+            writer,
+            hasReturnValue ? new[] { awaitable ? methodToGenerate.UnwrappedReturnType! : method.ReturnType } : Array.Empty<ITypeSymbol>(),
+            loggerVariable);
         writer.Write($"\"Method {method.Name} returned");
         if (hasReturnValue)
         {
