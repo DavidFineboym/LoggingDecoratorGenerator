@@ -20,6 +20,7 @@ internal class MethodToGenerate
 
     private void CheckReturnType(ITypeSymbol methodReturnType)
     {
+        // TODO: Don't use GetAwaiter and await only four well known types- only Task, Task<TResult>, ValueTask, ValueTask<TResult>.
         IMethodSymbol? getAwaiterMethodCandidate = methodReturnType.GetMembers(name: "GetAwaiter")
             .OfType<IMethodSymbol>()
             .SingleOrDefault(static method => method.DeclaredAccessibility == Accessibility.Public
