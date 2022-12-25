@@ -121,20 +121,8 @@ public class DecoratorGenerator : IIncrementalGenerator
                 continue;
             }
 
-            // Get all the members in the interface
-            ImmutableArray<ISymbol> interfaceMembers = interfaceSymbol.GetMembers();
-            var members = new List<IMethodSymbol>();
-
-            foreach (ISymbol member in interfaceMembers)
-            {
-                if (member is IMethodSymbol method && !method.IsStatic && method.MethodKind == MethodKind.Ordinary)
-                {
-                    members.Add(method);
-                }
-            }
-
             // Create an InterfaceToGenerate for use in the generation phase
-            interfacesToGenerate.Add(new InterfaceToGenerate(interfaceSymbol, members, interfaceDeclarationSyntax));
+            interfacesToGenerate.Add(new InterfaceToGenerate(interfaceSymbol, interfaceDeclarationSyntax));
         }
 
         return interfacesToGenerate;

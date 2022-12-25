@@ -1,6 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.CodeDom.Compiler;
 
 namespace Fineboym.Logging.Generator;
@@ -23,8 +22,7 @@ namespace Fineboym.Logging.Generator
         using IndentedTextWriter writer = new(stringWriter, "    ");
         writer.WriteLine("#nullable enable");
         writer.WriteLine();
-        string nameSpace = GetNamespace(interfaceToGenerate.InterfaceDeclarationSyntax);
-        writer.WriteLine($"namespace {nameSpace}");
+        writer.WriteLine($"namespace {interfaceToGenerate.Namespace}");
         writer.WriteLine("{");
         writer.Indent++;
 
@@ -47,12 +45,13 @@ namespace Fineboym.Logging.Generator
         writer.Indent--;
         writer.WriteLine("}");
 
-        foreach (IMethodSymbol method in interfaceToGenerate.Methods)
+        foreach (MethodToGenerate methodToGenerate in interfaceToGenerate.Methods)
         {
             writer.WriteLine();
-            string loggerDelegateVariable = AppendLoggerMessageDefine(writer, method);
+            string loggerDelegateBeforeVariable = AppendLoggerMessageDefineForBeforeCall(writer, methodToGenerate.MethodSymbol);
+            string loggerDelegateAfterVariable = AppendLoggerMessageDefineForAfterCall(writer, methodToGenerate);
             writer.WriteLine();
-            AppendMethod(writer, method, loggerDelegateVariable);
+            AppendMethod(writer, methodToGenerate, loggerDelegateBeforeVariable, loggerDelegateAfterVariable);
         }
 
         writer.Indent--;
@@ -65,54 +64,12 @@ namespace Fineboym.Logging.Generator
         return (className, stringWriter.ToString());
     }
 
-    // determine the namespace the class/enum/struct is declared in, if any
-    private static string GetNamespace(BaseTypeDeclarationSyntax syntax)
+    private static void AppendMethod(IndentedTextWriter writer, MethodToGenerate methodToGenerate, string loggerDelegateBeforeVariable, string loggerDelegateAfterVariable)
     {
-        // If we don't have a namespace at all we'll return an empty string
-        // This accounts for the "default namespace" case
-        string nameSpace = string.Empty;
+        IMethodSymbol method = methodToGenerate.MethodSymbol;
+        bool awaitable = methodToGenerate.Awaitable;
+        bool hasReturnValue = methodToGenerate.HasReturnValue;
 
-        // Get the containing syntax node for the type declaration
-        // (could be a nested type, for example)
-        SyntaxNode? potentialNamespaceParent = syntax.Parent;
-
-        // Keep moving "out" of nested classes etc until we get to a namespace
-        // or until we run out of parents
-        while (potentialNamespaceParent != null &&
-                potentialNamespaceParent is not NamespaceDeclarationSyntax
-                && potentialNamespaceParent is not FileScopedNamespaceDeclarationSyntax)
-        {
-            potentialNamespaceParent = potentialNamespaceParent.Parent;
-        }
-
-        // Build up the final namespace by looping until we no longer have a namespace declaration
-        if (potentialNamespaceParent is BaseNamespaceDeclarationSyntax namespaceParent)
-        {
-            // We have a namespace. Use that as the type
-            nameSpace = namespaceParent.Name.ToString();
-
-            // Keep moving "out" of the namespace declarations until we 
-            // run out of nested namespace declarations
-            while (true)
-            {
-                if (namespaceParent.Parent is not NamespaceDeclarationSyntax parent)
-                {
-                    break;
-                }
-
-                // Add the outer namespace as a prefix to the final namespace
-                nameSpace = $"{namespaceParent.Name}.{nameSpace}";
-                namespaceParent = parent;
-            }
-        }
-
-        // return the final namespace
-        return nameSpace;
-    }
-
-    private static void AppendMethod(IndentedTextWriter writer, IMethodSymbol method, string loggerDelegateVariable)
-    {
-        (bool awaitable, bool hasReturnValue) = CheckReturnType(method.ReturnType);
         writer.Write($"public {(awaitable ? "async " : string.Empty)}{method.ReturnType} {method.Name}(");
         for (int i = 0; i < method.Parameters.Length; i++)
         {
@@ -126,7 +83,7 @@ namespace Fineboym.Logging.Generator
         writer.WriteLine(")");
         writer.WriteLine("{");
         writer.Indent++;
-        writer.Write($"{loggerDelegateVariable}(_logger, ");
+        writer.Write($"{loggerDelegateBeforeVariable}(_logger, ");
         for (int i = 0; i < method.Parameters.Length; i++)
         {
             IParameterSymbol parameter = method.Parameters[i];
@@ -161,42 +118,18 @@ namespace Fineboym.Logging.Generator
             }
         }
         writer.WriteLine(");");
+        writer.Write($"{loggerDelegateAfterVariable}(_logger, ");
         if (hasReturnValue)
         {
+            writer.WriteLine("result, null);");
             writer.WriteLine("return result;");
+        }
+        else
+        {
+            writer.WriteLine("null);");
         }
         writer.Indent--;
         writer.WriteLine("}");
-    }
-
-    private static (bool awaitable, bool hasReturnValue) CheckReturnType(ITypeSymbol methodReturnType)
-    {
-        IMethodSymbol? getAwaiterMethodCandidate = methodReturnType.GetMembers(name: "GetAwaiter")
-            .OfType<IMethodSymbol>()
-            .SingleOrDefault(static method => method.DeclaredAccessibility == Accessibility.Public
-                                              && !method.IsAbstract
-                                              && !method.IsStatic
-                                              && method.Parameters.IsEmpty
-                                              && method.TypeParameters.IsEmpty);
-
-        if (getAwaiterMethodCandidate == null)
-        {
-            return (false, methodReturnType.SpecialType != SpecialType.System_Void);
-        }
-
-        string returnTypeFullName = getAwaiterMethodCandidate.ReturnType.OriginalDefinition.ToString();
-
-        if (returnTypeFullName is "System.Runtime.CompilerServices.TaskAwaiter" or "System.Runtime.CompilerServices.ValueTaskAwaiter")
-        {
-            return (true, false);
-        }
-
-        if (returnTypeFullName is "System.Runtime.CompilerServices.TaskAwaiter<TResult>" or "System.Runtime.CompilerServices.ValueTaskAwaiter<TResult>")
-        {
-            return (true, true);
-        }
-
-        return (false, methodReturnType.SpecialType != SpecialType.System_Void);
     }
 
     /// <summary>
@@ -205,42 +138,11 @@ namespace Fineboym.Logging.Generator
     /// <param name="writer"></param>
     /// <param name="method"></param>
     /// <returns>Variable name of logger delegate.</returns>
-    private static string AppendLoggerMessageDefine(IndentedTextWriter writer, IMethodSymbol method)
+    private static string AppendLoggerMessageDefineForBeforeCall(IndentedTextWriter writer, IMethodSymbol method)
     {
-        writer.Write("private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, ");
-        for (int i = 0; i < method.Parameters.Length; i++)
-        {
-            IParameterSymbol parameter = method.Parameters[i];
-            writer.Write($"{parameter.Type}");
-            if (i < method.Parameters.Length - 1)
-            {
-                writer.Write(", ");
-            }
-            else if (i == method.Parameters.Length - 1)
-            {
-                writer.Write(", ");
-            }
-        }
         string loggerVariable = $"s_before{method.Name}";
-        writer.Write($"System.Exception?> {loggerVariable} = Microsoft.Extensions.Logging.LoggerMessage.Define");
-        for (int i = 0; i < method.Parameters.Length; i++)
-        {
-            if (i == 0)
-            {
-                writer.Write("<");
-            }
-            IParameterSymbol parameter = method.Parameters[i];
-            writer.Write($"{parameter.Type}");
-            if (i < method.Parameters.Length - 1)
-            {
-                writer.Write(", ");
-            }
-            else if (i == method.Parameters.Length - 1)
-            {
-                writer.Write(">");
-            }
-        }
-        writer.Write($"(Microsoft.Extensions.Logging.LogLevel.Information, 0, \"Entering {method.Name}");
+        AppendLoggerMessageDefineUpToFormatString(writer, method.Parameters.Select(static p => p.Type).ToArray(), loggerVariable);
+        writer.Write($"\"Entering {method.Name}");
         for (int i = 0; i < method.Parameters.Length; i++)
         {
             if (i == 0)
@@ -254,10 +156,59 @@ namespace Fineboym.Logging.Generator
                 writer.Write(", ");
             }
         }
-        writer.Write("\");");
-
-        writer.WriteLine();
+        writer.WriteLine("\");");
 
         return loggerVariable;
+    }
+
+    private static string AppendLoggerMessageDefineForAfterCall(IndentedTextWriter writer, MethodToGenerate methodToGenerate)
+    {
+        IMethodSymbol method = methodToGenerate.MethodSymbol;
+        bool hasReturnValue = methodToGenerate.HasReturnValue;
+        bool awaitable = methodToGenerate.Awaitable;
+
+        string loggerVariable = $"s_after{method.Name}";
+        AppendLoggerMessageDefineUpToFormatString(
+            writer,
+            hasReturnValue ? new[] { awaitable ? methodToGenerate.UnwrappedReturnType! : method.ReturnType } : Array.Empty<ITypeSymbol>(),
+            loggerVariable);
+        writer.Write($"\"Method {method.Name} returned");
+        if (hasReturnValue)
+        {
+            writer.Write(". Result = {result}");
+        }
+        writer.WriteLine("\");");
+
+        return loggerVariable;
+    }
+
+    private static void AppendLoggerMessageDefineUpToFormatString(IndentedTextWriter writer, IReadOnlyList<ITypeSymbol> types, string loggerVariable)
+    {
+        writer.Write("private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, ");
+        for (int i = 0; i < types.Count; i++)
+        {
+            ITypeSymbol type = types[i];
+            writer.Write(type);
+            writer.Write(", ");
+        }
+        writer.Write($"System.Exception?> {loggerVariable} = Microsoft.Extensions.Logging.LoggerMessage.Define");
+        for (int i = 0; i < types.Count; i++)
+        {
+            if (i == 0)
+            {
+                writer.Write("<");
+            }
+            ITypeSymbol type = types[i];
+            writer.Write(type);
+            if (i < types.Count - 1)
+            {
+                writer.Write(", ");
+            }
+            else if (i == types.Count - 1)
+            {
+                writer.Write(">");
+            }
+        }
+        writer.Write($"(Microsoft.Extensions.Logging.LogLevel.Information, 0, ");
     }
 }
