@@ -117,7 +117,13 @@ namespace Fineboym.Logging.Generator
                 writer.Write(", ");
             }
         }
-        writer.WriteLine(");");
+        writer.Write(')');
+        if (awaitable)
+        {
+            writer.Write(".ConfigureAwait(false)");
+        }
+        writer.WriteLine(';');
+
         writer.Write($"{loggerDelegateAfterVariable}(_logger, ");
         if (hasReturnValue)
         {

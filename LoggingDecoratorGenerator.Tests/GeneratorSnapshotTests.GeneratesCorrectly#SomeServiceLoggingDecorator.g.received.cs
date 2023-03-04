@@ -41,7 +41,7 @@ namespace SomeFolder.SomeSubFolder
         public async System.Threading.Tasks.Task TaskReturningAsyncMethod(int x, int y)
         {
             s_beforeTaskReturningAsyncMethod(_logger, x, y, null);
-            await _decorated.TaskReturningAsyncMethod(x, y);
+            await _decorated.TaskReturningAsyncMethod(x, y).ConfigureAwait(false);
             s_afterTaskReturningAsyncMethod(_logger, null);
         }
         
@@ -51,7 +51,7 @@ namespace SomeFolder.SomeSubFolder
         public async System.Threading.Tasks.Task<int> TaskIntReturningAsyncMethod(int x, int y)
         {
             s_beforeTaskIntReturningAsyncMethod(_logger, x, y, null);
-            var result = await _decorated.TaskIntReturningAsyncMethod(x, y);
+            var result = await _decorated.TaskIntReturningAsyncMethod(x, y).ConfigureAwait(false);
             s_afterTaskIntReturningAsyncMethod(_logger, result, null);
             return result;
         }
@@ -62,7 +62,7 @@ namespace SomeFolder.SomeSubFolder
         public async System.Threading.Tasks.ValueTask ValueTaskReturningAsyncMethod(int x, int y)
         {
             s_beforeValueTaskReturningAsyncMethod(_logger, x, y, null);
-            await _decorated.ValueTaskReturningAsyncMethod(x, y);
+            await _decorated.ValueTaskReturningAsyncMethod(x, y).ConfigureAwait(false);
             s_afterValueTaskReturningAsyncMethod(_logger, null);
         }
         
@@ -72,7 +72,7 @@ namespace SomeFolder.SomeSubFolder
         public async System.Threading.Tasks.ValueTask<float> ValueTaskFloatReturningAsyncMethod(int x, int y)
         {
             s_beforeValueTaskFloatReturningAsyncMethod(_logger, x, y, null);
-            var result = await _decorated.ValueTaskFloatReturningAsyncMethod(x, y);
+            var result = await _decorated.ValueTaskFloatReturningAsyncMethod(x, y).ConfigureAwait(false);
             s_afterValueTaskFloatReturningAsyncMethod(_logger, result, null);
             return result;
         }
