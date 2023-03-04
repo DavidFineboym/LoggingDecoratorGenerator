@@ -20,38 +20,21 @@ internal class MethodToGenerate
 
     private void CheckReturnType(ITypeSymbol methodReturnType)
     {
-        // TODO: Don't use GetAwaiter and await only four well known types- only Task, Task<TResult>, ValueTask, ValueTask<TResult>.
-        IMethodSymbol? getAwaiterMethodCandidate = methodReturnType.GetMembers(name: "GetAwaiter")
-            .OfType<IMethodSymbol>()
-            .SingleOrDefault(static method => method.DeclaredAccessibility == Accessibility.Public
-                                              && !method.IsAbstract
-                                              && !method.IsStatic
-                                              && method.Parameters.IsEmpty
-                                              && method.TypeParameters.IsEmpty);
+        string returnTypeOriginalDef = methodReturnType.OriginalDefinition.ToString();
 
-        if (getAwaiterMethodCandidate == null)
-        {
-            Awaitable = false;
-            HasReturnValue = methodReturnType.SpecialType != SpecialType.System_Void;
-
-            return;
-        }
-
-        string returnTypeFullName = getAwaiterMethodCandidate.ReturnType.OriginalDefinition.ToString();
-
-        if (returnTypeFullName is "System.Runtime.CompilerServices.TaskAwaiter" or "System.Runtime.CompilerServices.ValueTaskAwaiter")
-        {
-            Awaitable = true;
-            HasReturnValue = false;
-
-            return;
-        }
-
-        if (returnTypeFullName is "System.Runtime.CompilerServices.TaskAwaiter<TResult>" or "System.Runtime.CompilerServices.ValueTaskAwaiter<TResult>")
+        if (returnTypeOriginalDef is "System.Threading.Tasks.Task<TResult>" or "System.Threading.Tasks.ValueTask<TResult>")
         {
             Awaitable = true;
             HasReturnValue = true;
-            UnwrappedReturnType = ((INamedTypeSymbol)getAwaiterMethodCandidate.ReturnType).TypeArguments[0];
+            UnwrappedReturnType = ((INamedTypeSymbol)methodReturnType).TypeArguments[0];
+
+            return;
+        }
+
+        if (returnTypeOriginalDef is "System.Threading.Tasks.Task" or "System.Threading.Tasks.ValueTask")
+        {
+            Awaitable = true;
+            HasReturnValue = false;
 
             return;
         }
