@@ -27,7 +27,6 @@ namespace Fineboym.Logging.Generator
         // TODO : Check generic interfaces and also generic methods in interfaces
         // TODO : Read Andrew's post about shipping the attribute together with the generator and how to do it.
         // TODO : Check non-public access modifiers 
-        // TODO : Read MVVM toolkit blog, they were talking about not capturing syntax and semantic models because of lifetime/perf issues.
         // TODO : Add GeneratedCodeAttribute where needed
         // TODO : Allow user to omit log parameters or return value from log
         using StringWriter stringWriter = new();
