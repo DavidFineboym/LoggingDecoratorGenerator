@@ -15,9 +15,21 @@ namespace Fineboym.Logging.Generator
     }
 }";
 
+    private static readonly SymbolDisplayFormat s_symbolFormat = SymbolDisplayFormat.FullyQualifiedFormat
+        .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
+
     public static (string className, string source) GenerateLoggingDecoratorClass(InterfaceToGenerate interfaceToGenerate)
     {
+        // TODO : Generate if log level enabled by myself like .NET and pass false to Define method.
+        // new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true }
+        // TODO : Allow specifying log level in attribute, on interface and then on method level for more granular control.
+        // TODO : Allow specifying event ID on method level only.
         // TODO : Check generic interfaces and also generic methods in interfaces
+        // TODO : Read Andrew's post about shipping the attribute together with the generator and how to do it.
+        // TODO : Check non-public access modifiers 
+        // TODO : Read MVVM toolkit blog, they were talking about not capturing syntax and semantic models because of lifetime/perf issues.
+        // TODO : Add GeneratedCodeAttribute where needed
+        // TODO : Allow user to omit log parameters or return value from log
         using StringWriter stringWriter = new();
         using IndentedTextWriter writer = new(stringWriter, "    ");
         writer.WriteLine("#nullable enable");
@@ -29,7 +41,7 @@ namespace Fineboym.Logging.Generator
         string interfaceName = interfaceToGenerate.Interface.Name;
         string className = $"{(interfaceName[0] == 'I' ? interfaceName.Substring(1) : interfaceName)}LoggingDecorator";
         string interfaceFullName = $"{interfaceToGenerate.Interface}";
-        string loggerType = $"Microsoft.Extensions.Logging.ILogger<{interfaceFullName}>";
+        string loggerType = $"global::Microsoft.Extensions.Logging.ILogger<{interfaceFullName}>";
 
         writer.WriteLine($"{SyntaxFacts.GetText(interfaceToGenerate.Interface.DeclaredAccessibility)} sealed class {className} : {interfaceFullName}");
         writer.WriteLine("{");
@@ -70,11 +82,11 @@ namespace Fineboym.Logging.Generator
         bool awaitable = methodToGenerate.Awaitable;
         bool hasReturnValue = methodToGenerate.HasReturnValue;
 
-        writer.Write($"public {(awaitable ? "async " : string.Empty)}{method.ReturnType} {method.Name}(");
+        writer.Write($"public {(awaitable ? "async " : string.Empty)}{method.ReturnType.ToDisplayString(s_symbolFormat)} {method.Name}(");
         for (int i = 0; i < method.Parameters.Length; i++)
         {
             IParameterSymbol parameter = method.Parameters[i];
-            writer.Write($"{parameter.Type} {parameter.Name}");
+            writer.Write($"{parameter.Type.ToDisplayString(s_symbolFormat)} {parameter.Name}");
             if (i < method.Parameters.Length - 1)
             {
                 writer.Write(", ");
@@ -147,7 +159,7 @@ namespace Fineboym.Logging.Generator
     private static string AppendLoggerMessageDefineForBeforeCall(IndentedTextWriter writer, IMethodSymbol method)
     {
         string loggerVariable = $"s_before{method.Name}";
-        AppendLoggerMessageDefineUpToFormatString(writer, method.Parameters.Select(static p => p.Type).ToArray(), loggerVariable);
+        AppendLoggerMessageDefineUpToFormatString(writer, method.Parameters.Select(static p => p.Type).ToArray(), loggerVariable, method.Name);
         writer.Write($"\"Entering {method.Name}");
         for (int i = 0; i < method.Parameters.Length; i++)
         {
@@ -177,7 +189,8 @@ namespace Fineboym.Logging.Generator
         AppendLoggerMessageDefineUpToFormatString(
             writer,
             hasReturnValue ? new[] { awaitable ? methodToGenerate.UnwrappedReturnType! : method.ReturnType } : Array.Empty<ITypeSymbol>(),
-            loggerVariable);
+            loggerVariable,
+            method.Name);
         writer.Write($"\"Method {method.Name} returned");
         if (hasReturnValue)
         {
@@ -188,16 +201,16 @@ namespace Fineboym.Logging.Generator
         return loggerVariable;
     }
 
-    private static void AppendLoggerMessageDefineUpToFormatString(IndentedTextWriter writer, IReadOnlyList<ITypeSymbol> types, string loggerVariable)
+    private static void AppendLoggerMessageDefineUpToFormatString(IndentedTextWriter writer, IReadOnlyList<ITypeSymbol> types, string loggerVariable, string eventName)
     {
-        writer.Write("private static readonly System.Action<Microsoft.Extensions.Logging.ILogger, ");
+        writer.Write("private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, ");
         for (int i = 0; i < types.Count; i++)
         {
             ITypeSymbol type = types[i];
-            writer.Write(type);
+            writer.Write(type.ToDisplayString(s_symbolFormat));
             writer.Write(", ");
         }
-        writer.Write($"System.Exception?> {loggerVariable} = Microsoft.Extensions.Logging.LoggerMessage.Define");
+        writer.Write($"global::System.Exception?> {loggerVariable} = global::Microsoft.Extensions.Logging.LoggerMessage.Define");
         for (int i = 0; i < types.Count; i++)
         {
             if (i == 0)
@@ -205,7 +218,7 @@ namespace Fineboym.Logging.Generator
                 writer.Write("<");
             }
             ITypeSymbol type = types[i];
-            writer.Write(type);
+            writer.Write(type.ToDisplayString(s_symbolFormat));
             if (i < types.Count - 1)
             {
                 writer.Write(", ");
@@ -215,6 +228,6 @@ namespace Fineboym.Logging.Generator
                 writer.Write(">");
             }
         }
-        writer.Write($"(Microsoft.Extensions.Logging.LogLevel.Information, 0, ");
+        writer.Write($"(global::Microsoft.Extensions.Logging.LogLevel.Information, new global::Microsoft.Extensions.Logging.EventId(0, nameof({eventName})), ");
     }
 }
