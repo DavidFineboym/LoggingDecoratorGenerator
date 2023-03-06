@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Text;
 
 namespace Fineboym.Logging.Generator;
@@ -92,9 +93,9 @@ public class DecoratorGenerator : IIncrementalGenerator
         // Create a list to hold our output
         var interfacesToGenerate = new List<InterfaceToGenerate>();
         // Get the semantic representation of our marker attribute 
-        INamedTypeSymbol? interfaceAttribute = compilation.GetTypeByMetadataName(DecorateAttributeFullName);
+        INamedTypeSymbol? markerAttribute = compilation.GetTypeByMetadataName(DecorateAttributeFullName);
 
-        if (interfaceAttribute == null)
+        if (markerAttribute == null)
         {
             // If this is null, the compilation couldn't find the marker attribute type
             // which suggests there's something very wrong! Bail out..
@@ -119,6 +120,24 @@ public class DecoratorGenerator : IIncrementalGenerator
             {
                 // nested types are not supported
                 continue;
+            }
+
+            foreach (AttributeData attributeData in interfaceSymbol.GetAttributes())
+            {
+                if (!markerAttribute.Equals(attributeData.AttributeClass, SymbolEqualityComparer.Default))
+                {
+                    continue;
+                }
+
+                foreach (KeyValuePair<string, TypedConstant> namedArgument in attributeData.NamedArguments)
+                {
+                    if (namedArgument.Key == "Level" && namedArgument.Value.Value?.ToString() is { } n)
+                    {
+                        Debug.WriteLine(n);
+                    }
+                }
+
+                break;
             }
 
             // Create an InterfaceToGenerate for use in the generation phase
