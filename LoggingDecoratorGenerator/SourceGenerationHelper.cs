@@ -10,8 +10,9 @@ internal static class SourceGenerationHelper
 namespace Fineboym.Logging.Generator
 {
     [System.AttributeUsage(System.AttributeTargets.Interface, AllowMultiple = false, Inherited = false)]
-    internal class DecorateWithLoggerAttribute : System.Attribute
+    internal sealed class DecorateWithLoggerAttribute : System.Attribute
     {
+        public Microsoft.Extensions.Logging.LogLevel Level { get; set; } = Microsoft.Extensions.Logging.LogLevel.Information;
     }
 }";
 
@@ -48,13 +49,8 @@ namespace Fineboym.Logging.Generator
         writer.WriteLine($"private readonly {loggerType} _logger;");
         writer.WriteLine($"private readonly {interfaceFullName} _decorated;");
         writer.WriteLine();
-        writer.WriteLine($"public {className}({loggerType} logger, {interfaceFullName} decorated)");
-        writer.WriteLine("{");
-        writer.Indent++;
-        writer.WriteLine("_logger = logger;");
-        writer.WriteLine("_decorated = decorated;");
-        writer.Indent--;
-        writer.WriteLine("}");
+
+        AppendConstructor(writer, className, interfaceFullName, loggerType);
 
         foreach (MethodToGenerate methodToGenerate in interfaceToGenerate.Methods)
         {
@@ -73,6 +69,17 @@ namespace Fineboym.Logging.Generator
         writer.Flush();
 
         return (className, stringWriter.ToString());
+    }
+
+    private static void AppendConstructor(IndentedTextWriter writer, string className, string interfaceFullName, string loggerType)
+    {
+        writer.WriteLine($"public {className}({loggerType} logger, {interfaceFullName} decorated)");
+        writer.WriteLine("{");
+        writer.Indent++;
+        writer.WriteLine("_logger = logger;");
+        writer.WriteLine("_decorated = decorated;");
+        writer.Indent--;
+        writer.WriteLine("}");
     }
 
     private static void AppendMethod(IndentedTextWriter writer, MethodToGenerate methodToGenerate, string loggerDelegateBeforeVariable, string loggerDelegateAfterVariable)
