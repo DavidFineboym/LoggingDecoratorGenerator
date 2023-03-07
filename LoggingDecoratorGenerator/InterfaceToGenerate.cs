@@ -14,12 +14,15 @@ internal class InterfaceToGenerate
 
     public string Namespace { get; }
 
-    public InterfaceToGenerate(INamedTypeSymbol interfaceSymbol, InterfaceDeclarationSyntax interfaceDeclarationSyntax)
+    public string LogLevel { get; }
+
+    public InterfaceToGenerate(INamedTypeSymbol interfaceSymbol, InterfaceDeclarationSyntax interfaceDeclarationSyntax, string logLevel)
     {
         Interface = interfaceSymbol;
         Methods = new List<MethodToGenerate>();
         InterfaceDeclarationSyntax = interfaceDeclarationSyntax;
         Namespace = GetNamespace(interfaceDeclarationSyntax);
+        LogLevel = logLevel;
 
         // Get all the members in the interface
         ImmutableArray<ISymbol> interfaceMembers = interfaceSymbol.GetMembers();
@@ -28,7 +31,7 @@ internal class InterfaceToGenerate
         {
             if (member is IMethodSymbol method && !method.IsStatic && method.MethodKind == MethodKind.Ordinary)
             {
-                Methods.Add(new MethodToGenerate(method));
+                Methods.Add(new MethodToGenerate(method, logLevel));
             }
         }
     }

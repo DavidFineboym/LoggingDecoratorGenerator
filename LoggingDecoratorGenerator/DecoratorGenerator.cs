@@ -91,10 +91,10 @@ public class DecoratorGenerator : IIncrementalGenerator
     {
         // Create a list to hold our output
         var interfacesToGenerate = new List<InterfaceToGenerate>();
-        // Get the semantic representation of our marker attribute 
-        INamedTypeSymbol? interfaceAttribute = compilation.GetTypeByMetadataName(DecorateAttributeFullName);
+        // Get the semantic representation of our marker attribute
+        INamedTypeSymbol? markerAttribute = compilation.GetTypeByMetadataName(DecorateAttributeFullName);
 
-        if (interfaceAttribute == null)
+        if (markerAttribute == null)
         {
             // If this is null, the compilation couldn't find the marker attribute type
             // which suggests there's something very wrong! Bail out..
@@ -121,10 +121,60 @@ public class DecoratorGenerator : IIncrementalGenerator
                 continue;
             }
 
+            string? interfaceLogLevel = ResolveInterfaceLogLevel(markerAttribute, interfaceSymbol);
+            if (interfaceLogLevel == null)
+            {
+                continue;
+            }
+
             // Create an InterfaceToGenerate for use in the generation phase
-            interfacesToGenerate.Add(new InterfaceToGenerate(interfaceSymbol, interfaceDeclarationSyntax));
+            interfacesToGenerate.Add(new InterfaceToGenerate(interfaceSymbol, interfaceDeclarationSyntax, interfaceLogLevel));
         }
 
         return interfacesToGenerate;
+    }
+
+    private static string? ResolveInterfaceLogLevel(INamedTypeSymbol markerAttribute, INamedTypeSymbol interfaceSymbol)
+    {
+        foreach (AttributeData attributeData in interfaceSymbol.GetAttributes())
+        {
+            if (!markerAttribute.Equals(attributeData.AttributeClass, SymbolEqualityComparer.Default))
+            {
+                continue;
+            }
+
+            ImmutableArray<TypedConstant> args = attributeData.ConstructorArguments;
+
+            // make sure we don't have any errors
+            foreach (TypedConstant arg in args)
+            {
+                if (arg.Kind == TypedConstantKind.Error)
+                {
+                    // have an error, so don't try and do any generation
+                    return null;
+                }
+            }
+
+            if (args[0].Value is not int value)
+            {
+                return null;
+            }
+
+            return $"global::Microsoft.Extensions.Logging.LogLevel.{ConvertLogLevel(value)}";
+        }
+
+        return null;
+
+        static string ConvertLogLevel(int value) => value switch
+        {
+            0 => "Trace",
+            1 => "Debug",
+            2 => "Information",
+            3 => "Warning",
+            4 => "Error",
+            5 => "Critical",
+            6 => "None",
+            _ => value.ToString()
+        };
     }
 }
