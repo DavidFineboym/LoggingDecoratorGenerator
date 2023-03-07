@@ -12,7 +12,12 @@ namespace Fineboym.Logging.Generator
     [System.AttributeUsage(System.AttributeTargets.Interface, AllowMultiple = false, Inherited = false)]
     internal sealed class DecorateWithLoggerAttribute : System.Attribute
     {
-        public Microsoft.Extensions.Logging.LogLevel Level { get; set; } = Microsoft.Extensions.Logging.LogLevel.Information;
+        public Microsoft.Extensions.Logging.LogLevel Level { get; }
+
+        public DecorateWithLoggerAttribute(Microsoft.Extensions.Logging.LogLevel level = Microsoft.Extensions.Logging.LogLevel.Information)
+        {
+            Level = level;
+        }
     }
 }";
 
@@ -55,7 +60,7 @@ namespace Fineboym.Logging.Generator
         foreach (MethodToGenerate methodToGenerate in interfaceToGenerate.Methods)
         {
             writer.WriteLine();
-            string loggerDelegateBeforeVariable = AppendLoggerMessageDefineForBeforeCall(writer, methodToGenerate.MethodSymbol);
+            string loggerDelegateBeforeVariable = AppendLoggerMessageDefineForBeforeCall(writer, methodToGenerate);
             string loggerDelegateAfterVariable = AppendLoggerMessageDefineForAfterCall(writer, methodToGenerate);
             writer.WriteLine();
             AppendMethod(writer, methodToGenerate, loggerDelegateBeforeVariable, loggerDelegateAfterVariable);
@@ -162,20 +167,26 @@ namespace Fineboym.Logging.Generator
     /// <param name="writer"></param>
     /// <param name="method"></param>
     /// <returns>Variable name of logger delegate.</returns>
-    private static string AppendLoggerMessageDefineForBeforeCall(IndentedTextWriter writer, IMethodSymbol method)
+    private static string AppendLoggerMessageDefineForBeforeCall(IndentedTextWriter writer, MethodToGenerate methodToGenerate)
     {
-        string loggerVariable = $"s_before{method.Name}";
-        AppendLoggerMessageDefineUpToFormatString(writer, method.Parameters.Select(static p => p.Type).ToArray(), loggerVariable, method.Name);
-        writer.Write($"\"Entering {method.Name}");
-        for (int i = 0; i < method.Parameters.Length; i++)
+        IMethodSymbol methodSymbol = methodToGenerate.MethodSymbol;
+        string loggerVariable = $"s_before{methodSymbol.Name}";
+        AppendLoggerMessageDefineUpToFormatString(
+            writer,
+            methodSymbol.Parameters.Select(static p => p.Type).ToArray(),
+            loggerVariable,
+            methodSymbol.Name,
+            methodToGenerate.LogLevel);
+        writer.Write($"\"Entering {methodSymbol.Name}");
+        for (int i = 0; i < methodSymbol.Parameters.Length; i++)
         {
             if (i == 0)
             {
                 writer.Write(" with parameters: ");
             }
-            IParameterSymbol parameter = method.Parameters[i];
+            IParameterSymbol parameter = methodSymbol.Parameters[i];
             writer.Write($"{parameter.Name} = {{{parameter.Name}}}");
-            if (i < method.Parameters.Length - 1)
+            if (i < methodSymbol.Parameters.Length - 1)
             {
                 writer.Write(", ");
             }
@@ -196,7 +207,8 @@ namespace Fineboym.Logging.Generator
             writer,
             hasReturnValue ? new[] { awaitable ? methodToGenerate.UnwrappedReturnType! : method.ReturnType } : Array.Empty<ITypeSymbol>(),
             loggerVariable,
-            method.Name);
+            method.Name,
+            methodToGenerate.LogLevel);
         writer.Write($"\"Method {method.Name} returned");
         if (hasReturnValue)
         {
@@ -207,7 +219,12 @@ namespace Fineboym.Logging.Generator
         return loggerVariable;
     }
 
-    private static void AppendLoggerMessageDefineUpToFormatString(IndentedTextWriter writer, IReadOnlyList<ITypeSymbol> types, string loggerVariable, string eventName)
+    private static void AppendLoggerMessageDefineUpToFormatString(
+        IndentedTextWriter writer,
+        IReadOnlyList<ITypeSymbol> types,
+        string loggerVariable,
+        string eventName,
+        string logLevel)
     {
         writer.Write("private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, ");
         for (int i = 0; i < types.Count; i++)
@@ -234,6 +251,6 @@ namespace Fineboym.Logging.Generator
                 writer.Write(">");
             }
         }
-        writer.Write($"(global::Microsoft.Extensions.Logging.LogLevel.Information, new global::Microsoft.Extensions.Logging.EventId(0, nameof({eventName})), ");
+        writer.Write($"({logLevel}, new global::Microsoft.Extensions.Logging.EventId(0, nameof({eventName})), ");
     }
 }

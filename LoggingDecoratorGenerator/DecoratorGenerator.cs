@@ -2,7 +2,6 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Text;
 
 namespace Fineboym.Logging.Generator;
@@ -92,7 +91,7 @@ public class DecoratorGenerator : IIncrementalGenerator
     {
         // Create a list to hold our output
         var interfacesToGenerate = new List<InterfaceToGenerate>();
-        // Get the semantic representation of our marker attribute 
+        // Get the semantic representation of our marker attribute
         INamedTypeSymbol? markerAttribute = compilation.GetTypeByMetadataName(DecorateAttributeFullName);
 
         if (markerAttribute == null)
@@ -122,28 +121,60 @@ public class DecoratorGenerator : IIncrementalGenerator
                 continue;
             }
 
-            foreach (AttributeData attributeData in interfaceSymbol.GetAttributes())
+            string? interfaceLogLevel = ResolveInterfaceLogLevel(markerAttribute, interfaceSymbol);
+            if (interfaceLogLevel == null)
             {
-                if (!markerAttribute.Equals(attributeData.AttributeClass, SymbolEqualityComparer.Default))
-                {
-                    continue;
-                }
-
-                foreach (KeyValuePair<string, TypedConstant> namedArgument in attributeData.NamedArguments)
-                {
-                    if (namedArgument.Key == "Level" && namedArgument.Value.Value?.ToString() is { } n)
-                    {
-                        Debug.WriteLine(n);
-                    }
-                }
-
-                break;
+                continue;
             }
 
             // Create an InterfaceToGenerate for use in the generation phase
-            interfacesToGenerate.Add(new InterfaceToGenerate(interfaceSymbol, interfaceDeclarationSyntax));
+            interfacesToGenerate.Add(new InterfaceToGenerate(interfaceSymbol, interfaceDeclarationSyntax, interfaceLogLevel));
         }
 
         return interfacesToGenerate;
+    }
+
+    private static string? ResolveInterfaceLogLevel(INamedTypeSymbol markerAttribute, INamedTypeSymbol interfaceSymbol)
+    {
+        foreach (AttributeData attributeData in interfaceSymbol.GetAttributes())
+        {
+            if (!markerAttribute.Equals(attributeData.AttributeClass, SymbolEqualityComparer.Default))
+            {
+                continue;
+            }
+
+            ImmutableArray<TypedConstant> args = attributeData.ConstructorArguments;
+
+            // make sure we don't have any errors
+            foreach (TypedConstant arg in args)
+            {
+                if (arg.Kind == TypedConstantKind.Error)
+                {
+                    // have an error, so don't try and do any generation
+                    return null;
+                }
+            }
+
+            if (args[0].Value is not int value)
+            {
+                return null;
+            }
+
+            return $"global::Microsoft.Extensions.Logging.LogLevel.{ConvertLogLevel(value)}";
+        }
+
+        return null;
+
+        static string ConvertLogLevel(int value) => value switch
+        {
+            0 => "Trace",
+            1 => "Debug",
+            2 => "Information",
+            3 => "Warning",
+            4 => "Error",
+            5 => "Critical",
+            6 => "None",
+            _ => value.ToString()
+        };
     }
 }

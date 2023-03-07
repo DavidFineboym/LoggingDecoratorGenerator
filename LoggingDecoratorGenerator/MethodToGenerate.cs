@@ -6,16 +6,19 @@ internal class MethodToGenerate
 {
     public IMethodSymbol MethodSymbol { get; }
 
+    public string LogLevel { get; }
+
     public bool Awaitable { get; private set; }
 
     public bool HasReturnValue { get; private set; }
 
     public ITypeSymbol? UnwrappedReturnType { get; private set; }
 
-    public MethodToGenerate(IMethodSymbol methodSymbol)
+    public MethodToGenerate(IMethodSymbol methodSymbol, string logLevel)
     {
         MethodSymbol = methodSymbol;
         CheckReturnType(methodSymbol.ReturnType);
+        LogLevel = logLevel;
     }
 
     private void CheckReturnType(ITypeSymbol methodReturnType)

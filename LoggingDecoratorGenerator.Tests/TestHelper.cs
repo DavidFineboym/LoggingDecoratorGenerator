@@ -1,6 +1,7 @@
 ﻿using Fineboym.Logging.Generator;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using System.Reflection;
 
 namespace LoggingDecoratorGenerator.Tests;
 
@@ -13,10 +14,17 @@ public static class TestHelper
 
         // Create references for assemblies we require
         // We could add multiple references if required
-        IEnumerable<PortableExecutableReference> references = new[]
+        var loggerAssembly = typeof(Microsoft.Extensions.Logging.LogLevel).Assembly;
+        List<PortableExecutableReference> references = new()
         {
             MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+            MetadataReference.CreateFromFile(loggerAssembly.Location),
         };
+
+        foreach (AssemblyName assemblyName in loggerAssembly.GetReferencedAssemblies())
+        {
+            references.Add(MetadataReference.CreateFromFile(Assembly.Load(assemblyName).Location));
+        }
 
         // Create a Roslyn compilation for the syntax tree.
         CSharpCompilation compilation = CSharpCompilation.Create(
