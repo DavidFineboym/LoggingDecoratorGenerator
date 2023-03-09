@@ -26,15 +26,15 @@ namespace Fineboym.Logging.Generator
 
     public static (string className, string source) GenerateLoggingDecoratorClass(InterfaceToGenerate interfaceToGenerate)
     {
-        // TODO : Generate if log level enabled by myself like .NET and pass false to Define method.
-        // new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true }
+        // TODO : Read Andrew's post about shipping the attribute together with the generator and how to do it.
         // TODO : Allow specifying log level in attribute, on interface and then on method level for more granular control.
         // TODO : Allow specifying event ID on method level only.
-        // TODO : Check generic interfaces and also generic methods in interfaces
-        // TODO : Read Andrew's post about shipping the attribute together with the generator and how to do it.
-        // TODO : Check non-public access modifiers 
-        // TODO : Add GeneratedCodeAttribute where needed
         // TODO : Allow user to omit log parameters or return value from log
+        // TODO : Add GeneratedCodeAttribute where needed
+        // TODO : Generate if log level enabled by myself like .NET and pass false to Define method.
+        // new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true }
+        // TODO : Check generic interfaces and also generic methods in interfaces. Emit error diagnostic in that case.
+        // TODO : Check non-public access modifiers
         using StringWriter stringWriter = new();
         using IndentedTextWriter writer = new(stringWriter, "    ");
         writer.WriteLine("#nullable enable");
