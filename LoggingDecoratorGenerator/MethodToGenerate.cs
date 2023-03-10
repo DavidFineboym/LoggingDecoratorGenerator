@@ -50,7 +50,7 @@ internal class MethodToGenerate
     private void CheckReturnType(ITypeSymbol methodReturnType)
     {
         string returnTypeOriginalDef = methodReturnType.OriginalDefinition.ToString();
-        // TODO : Convert to typeof(T).FullName
+
         if (returnTypeOriginalDef is "System.Threading.Tasks.Task<TResult>" or "System.Threading.Tasks.ValueTask<TResult>")
         {
             Awaitable = true;
