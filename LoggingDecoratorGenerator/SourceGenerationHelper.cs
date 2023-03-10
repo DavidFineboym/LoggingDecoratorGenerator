@@ -158,8 +158,7 @@ internal static class SourceGenerationHelper
             writer,
             methodSymbol.Parameters.Select(static p => p.Type).ToArray(),
             loggerVariable,
-            methodSymbol.Name,
-            methodToGenerate.LogLevel);
+            methodToGenerate);
         writer.Write($"\"Entering {methodSymbol.Name}");
         for (int i = 0; i < methodSymbol.Parameters.Length; i++)
         {
@@ -190,8 +189,7 @@ internal static class SourceGenerationHelper
             writer,
             hasReturnValue ? new[] { awaitable ? methodToGenerate.UnwrappedReturnType! : method.ReturnType } : Array.Empty<ITypeSymbol>(),
             loggerVariable,
-            method.Name,
-            methodToGenerate.LogLevel);
+            methodToGenerate);
         writer.Write($"\"Method {method.Name} returned");
         if (hasReturnValue)
         {
@@ -206,8 +204,7 @@ internal static class SourceGenerationHelper
         IndentedTextWriter writer,
         IReadOnlyList<ITypeSymbol> types,
         string loggerVariable,
-        string eventName,
-        string logLevel)
+        MethodToGenerate methodToGenerate)
     {
         writer.Write("private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, ");
         for (int i = 0; i < types.Count; i++)
@@ -234,6 +231,6 @@ internal static class SourceGenerationHelper
                 writer.Write(">");
             }
         }
-        writer.Write($"({logLevel}, new global::Microsoft.Extensions.Logging.EventId(0, nameof({eventName})), ");
+        writer.Write($"({methodToGenerate.LogLevel}, new global::Microsoft.Extensions.Logging.EventId({methodToGenerate.EventId}, {methodToGenerate.EventName}), ");
     }
 }

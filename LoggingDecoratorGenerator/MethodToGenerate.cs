@@ -10,6 +10,10 @@ internal class MethodToGenerate
 
     public string LogLevel { get; }
 
+    public string EventId { get; }
+
+    public string EventName { get; }
+
     public bool Awaitable { get; private set; }
 
     public bool HasReturnValue { get; private set; }
@@ -21,6 +25,8 @@ internal class MethodToGenerate
         MethodSymbol = methodSymbol;
         CheckReturnType(methodSymbol.ReturnType);
         LogLevel = interfaceLogLevel;
+        EventId = "-1";
+        EventName = $"nameof({methodSymbol.Name})";
 
         foreach (AttributeData attributeData in methodSymbol.GetAttributes())
         {
@@ -37,9 +43,17 @@ internal class MethodToGenerate
                     break;
                 }
 
-                if (arg.Key == nameof(MethodLogAttribute.Level) && typedConstant.Value is int value)
+                switch (arg.Key)
                 {
-                    LogLevel = $"global::Microsoft.Extensions.Logging.LogLevel.{(LogLevel)value}";
+                    case nameof(MethodLogAttribute.Level) when typedConstant.Value is int logLevel:
+                        LogLevel = $"global::Microsoft.Extensions.Logging.LogLevel.{(LogLevel)logLevel}";
+                        break;
+                    case nameof(MethodLogAttribute.EventId) when typedConstant.Value is int eventId:
+                        EventId = eventId.ToString();
+                        break;
+                    case nameof(MethodLogAttribute.EventName) when typedConstant.Value is string eventName:
+                        EventName = $"\"{eventName}\"";
+                        break;
                 }
             }
 
