@@ -11,7 +11,6 @@ internal static class SourceGenerationHelper
 
     public static (string className, string source) GenerateLoggingDecoratorClass(InterfaceToGenerate interfaceToGenerate)
     {
-        // TODO : Allow specifying event ID on method level only.
         // TODO : Allow user to omit log parameters or return value from log
         // TODO : Add GeneratedCodeAttribute where needed
         // TODO : Generate if log level enabled by myself like .NET and pass false to Define method.
