@@ -1,4 +1,4 @@
-﻿using Fineboym.Logging.Generator;
+﻿using Fineboym.Logging.Attributes;
 
 namespace LoggingDecoratorGenerator.IntegrationTests;
 

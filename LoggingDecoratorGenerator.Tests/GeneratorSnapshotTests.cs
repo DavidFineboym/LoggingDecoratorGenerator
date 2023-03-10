@@ -10,7 +10,8 @@ public class GeneratorSnapshotTests
         var source = @"
 using System;
 using System.Threading.Tasks;
-using Fineboym.Logging.Generator;
+using Microsoft.Extensions.Logging;
+using Fineboym.Logging.Attributes;
 
 namespace SomeFolder.SomeSubFolder
 {
@@ -19,6 +20,7 @@ namespace SomeFolder.SomeSubFolder
     [DecorateWithLogger]
     public interface ISomeService
     {
+        [MethodLog(Level = LogLevel.Debug)]
         void VoidParameterlessMethod();
 
         int IntReturningMethod(int x, Person person);

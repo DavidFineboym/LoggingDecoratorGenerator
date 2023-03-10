@@ -1,4 +1,6 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Fineboym.Logging.Attributes;
+using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Logging;
 
 namespace Fineboym.Logging.Generator;
 
@@ -14,17 +16,41 @@ internal class MethodToGenerate
 
     public ITypeSymbol? UnwrappedReturnType { get; private set; }
 
-    public MethodToGenerate(IMethodSymbol methodSymbol, string logLevel)
+    public MethodToGenerate(IMethodSymbol methodSymbol, string interfaceLogLevel, INamedTypeSymbol methodMarkerAttribute)
     {
         MethodSymbol = methodSymbol;
         CheckReturnType(methodSymbol.ReturnType);
-        LogLevel = logLevel;
+        LogLevel = interfaceLogLevel;
+
+        foreach (AttributeData attributeData in methodSymbol.GetAttributes())
+        {
+            if (!methodMarkerAttribute.Equals(attributeData.AttributeClass, SymbolEqualityComparer.Default))
+            {
+                continue;
+            }
+
+            foreach (KeyValuePair<string, TypedConstant> arg in attributeData.NamedArguments)
+            {
+                TypedConstant typedConstant = arg.Value;
+                if (typedConstant.Kind == TypedConstantKind.Error)
+                {
+                    break;
+                }
+
+                if (arg.Key == nameof(MethodLogAttribute.Level) && typedConstant.Value is int value)
+                {
+                    LogLevel = $"global::Microsoft.Extensions.Logging.LogLevel.{(LogLevel)value}";
+                }
+            }
+
+            break;
+        }
     }
 
     private void CheckReturnType(ITypeSymbol methodReturnType)
     {
         string returnTypeOriginalDef = methodReturnType.OriginalDefinition.ToString();
-
+        // TODO : Convert to typeof(T).FullName
         if (returnTypeOriginalDef is "System.Threading.Tasks.Task<TResult>" or "System.Threading.Tasks.ValueTask<TResult>")
         {
             Awaitable = true;

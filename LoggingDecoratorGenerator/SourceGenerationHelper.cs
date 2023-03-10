@@ -6,28 +6,11 @@ namespace Fineboym.Logging.Generator;
 
 internal static class SourceGenerationHelper
 {
-    public const string Attribute = @"
-namespace Fineboym.Logging.Generator
-{
-    [System.AttributeUsage(System.AttributeTargets.Interface, AllowMultiple = false, Inherited = false)]
-    internal sealed class DecorateWithLoggerAttribute : System.Attribute
-    {
-        public Microsoft.Extensions.Logging.LogLevel Level { get; }
-
-        public DecorateWithLoggerAttribute(Microsoft.Extensions.Logging.LogLevel level = Microsoft.Extensions.Logging.LogLevel.Information)
-        {
-            Level = level;
-        }
-    }
-}";
-
     private static readonly SymbolDisplayFormat s_symbolFormat = SymbolDisplayFormat.FullyQualifiedFormat
         .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
 
     public static (string className, string source) GenerateLoggingDecoratorClass(InterfaceToGenerate interfaceToGenerate)
     {
-        // TODO : Read Andrew's post about shipping the attribute together with the generator and how to do it.
-        // TODO : Allow specifying log level in attribute, on interface and then on method level for more granular control.
         // TODO : Allow specifying event ID on method level only.
         // TODO : Allow user to omit log parameters or return value from log
         // TODO : Add GeneratedCodeAttribute where needed

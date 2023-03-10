@@ -1,6 +1,8 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Fineboym.Logging.Attributes;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.Extensions.Logging;
 using System.Collections.Immutable;
 using System.Text;
 
@@ -9,15 +11,10 @@ namespace Fineboym.Logging.Generator;
 [Generator]
 public class DecoratorGenerator : IIncrementalGenerator
 {
-    private const string DecorateAttributeFullName = "Fineboym.Logging.Generator.DecorateWithLoggerAttribute";
+    private static readonly string s_decorateAttributeFullName = typeof(DecorateWithLoggerAttribute).FullName;
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Add the marker attribute to the compilation
-        context.RegisterPostInitializationOutput(static ctx => ctx.AddSource(
-            hintName: "DecorateWithLoggerAttribute.g.cs",
-            sourceText: SourceText.From(text: SourceGenerationHelper.Attribute, encoding: Encoding.UTF8)));
-
         // Do a simple filter for interfaces
         IncrementalValuesProvider<InterfaceDeclarationSyntax> interfaceDeclarations = context.SyntaxProvider
             .CreateSyntaxProvider(
@@ -55,7 +52,7 @@ public class DecoratorGenerator : IIncrementalGenerator
                 INamedTypeSymbol attributeContainingTypeSymbol = attributeSymbol.ContainingType;
                 string fullName = attributeContainingTypeSymbol.ToDisplayString();
 
-                if (fullName == DecorateAttributeFullName)
+                if (fullName == s_decorateAttributeFullName)
                 {
                     return interfaceDeclarationSyntax;
                 }
@@ -92,9 +89,10 @@ public class DecoratorGenerator : IIncrementalGenerator
         // Create a list to hold our output
         var interfacesToGenerate = new List<InterfaceToGenerate>();
         // Get the semantic representation of our marker attribute
-        INamedTypeSymbol? markerAttribute = compilation.GetTypeByMetadataName(DecorateAttributeFullName);
+        INamedTypeSymbol? interfaceMarkerAttribute = compilation.GetTypeByMetadataName(s_decorateAttributeFullName);
+        INamedTypeSymbol? methodMarkerAttribute = compilation.GetTypeByMetadataName(typeof(MethodLogAttribute).FullName);
 
-        if (markerAttribute == null)
+        if (interfaceMarkerAttribute == null || methodMarkerAttribute == null)
         {
             // If this is null, the compilation couldn't find the marker attribute type
             // which suggests there's something very wrong! Bail out..
@@ -117,18 +115,18 @@ public class DecoratorGenerator : IIncrementalGenerator
             // Check if interfaceSymbol is a nested type
             if (interfaceSymbol.ContainingType != null)
             {
-                // nested types are not supported
+                // TODO : Emit error diagnostic because nested types are not supported
                 continue;
             }
 
-            string? interfaceLogLevel = ResolveInterfaceLogLevel(markerAttribute, interfaceSymbol);
+            string? interfaceLogLevel = ResolveInterfaceLogLevel(interfaceMarkerAttribute, interfaceSymbol);
             if (interfaceLogLevel == null)
             {
                 continue;
             }
 
             // Create an InterfaceToGenerate for use in the generation phase
-            interfacesToGenerate.Add(new InterfaceToGenerate(interfaceSymbol, interfaceDeclarationSyntax, interfaceLogLevel));
+            interfacesToGenerate.Add(new InterfaceToGenerate(interfaceSymbol, interfaceDeclarationSyntax, interfaceLogLevel, methodMarkerAttribute));
         }
 
         return interfacesToGenerate;
@@ -160,21 +158,9 @@ public class DecoratorGenerator : IIncrementalGenerator
                 return null;
             }
 
-            return $"global::Microsoft.Extensions.Logging.LogLevel.{ConvertLogLevel(value)}";
+            return $"global::Microsoft.Extensions.Logging.LogLevel.{(LogLevel)value}";
         }
 
         return null;
-
-        static string ConvertLogLevel(int value) => value switch
-        {
-            0 => "Trace",
-            1 => "Debug",
-            2 => "Information",
-            3 => "Warning",
-            4 => "Error",
-            5 => "Critical",
-            6 => "None",
-            _ => value.ToString()
-        };
     }
 }

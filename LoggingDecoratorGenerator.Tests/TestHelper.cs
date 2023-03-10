@@ -1,7 +1,6 @@
 ﻿using Fineboym.Logging.Generator;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using System.Reflection;
 
 namespace LoggingDecoratorGenerator.Tests;
 
@@ -12,19 +11,10 @@ public static class TestHelper
         // Parse the provided string into a C# syntax tree
         SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(source);
 
-        // Create references for assemblies we require
-        // We could add multiple references if required
-        var loggerAssembly = typeof(Microsoft.Extensions.Logging.LogLevel).Assembly;
-        List<PortableExecutableReference> references = new()
-        {
-            MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-            MetadataReference.CreateFromFile(loggerAssembly.Location),
-        };
-
-        foreach (AssemblyName assemblyName in loggerAssembly.GetReferencedAssemblies())
-        {
-            references.Add(MetadataReference.CreateFromFile(Assembly.Load(assemblyName).Location));
-        }
+        IEnumerable<PortableExecutableReference> references = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(static assembly => !assembly.IsDynamic && !string.IsNullOrWhiteSpace(assembly.Location))
+                .Select(static assembly => MetadataReference.CreateFromFile(assembly.Location))
+                .Concat(new[] { MetadataReference.CreateFromFile(typeof(DecoratorGenerator).Assembly.Location) });
 
         // Create a Roslyn compilation for the syntax tree.
         CSharpCompilation compilation = CSharpCompilation.Create(

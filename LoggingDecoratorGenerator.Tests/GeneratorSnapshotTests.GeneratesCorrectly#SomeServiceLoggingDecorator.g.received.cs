@@ -14,8 +14,8 @@ namespace SomeFolder.SomeSubFolder
             _decorated = decorated;
         }
         
-        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Exception?> s_beforeVoidParameterlessMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define(global::Microsoft.Extensions.Logging.LogLevel.Information, new global::Microsoft.Extensions.Logging.EventId(0, nameof(VoidParameterlessMethod)), "Entering VoidParameterlessMethod");
-        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Exception?> s_afterVoidParameterlessMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define(global::Microsoft.Extensions.Logging.LogLevel.Information, new global::Microsoft.Extensions.Logging.EventId(0, nameof(VoidParameterlessMethod)), "Method VoidParameterlessMethod returned");
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Exception?> s_beforeVoidParameterlessMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(0, nameof(VoidParameterlessMethod)), "Entering VoidParameterlessMethod");
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Exception?> s_afterVoidParameterlessMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(0, nameof(VoidParameterlessMethod)), "Method VoidParameterlessMethod returned");
         
         public global::System.Void VoidParameterlessMethod()
         {
