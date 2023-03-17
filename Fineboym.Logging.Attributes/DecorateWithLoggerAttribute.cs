@@ -8,7 +8,7 @@ namespace Fineboym.Logging.Attributes
     {
         public LogLevel Level { get; }
 
-        public DecorateWithLoggerAttribute(LogLevel level = LogLevel.Information)
+        public DecorateWithLoggerAttribute(LogLevel level = LogLevel.Debug)
         {
             Level = level;
         }

@@ -4,7 +4,7 @@ using System;
 namespace Fineboym.Logging.Attributes
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
-    public sealed class MethodLogAttribute : Attribute
+    public sealed class LogMethodAttribute : Attribute
     {
         public LogLevel Level { get; set; } = LogLevel.None;
 

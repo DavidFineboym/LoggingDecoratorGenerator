@@ -45,13 +45,13 @@ internal class MethodToGenerate
 
                 switch (arg.Key)
                 {
-                    case nameof(MethodLogAttribute.Level) when typedConstant.Value is int logLevel:
+                    case nameof(LogMethodAttribute.Level) when typedConstant.Value is int logLevel:
                         LogLevel = $"global::Microsoft.Extensions.Logging.LogLevel.{(LogLevel)logLevel}";
                         break;
-                    case nameof(MethodLogAttribute.EventId) when typedConstant.Value is int eventId:
+                    case nameof(LogMethodAttribute.EventId) when typedConstant.Value is int eventId:
                         EventId = eventId.ToString();
                         break;
-                    case nameof(MethodLogAttribute.EventName) when typedConstant.Value is string eventName:
+                    case nameof(LogMethodAttribute.EventName) when typedConstant.Value is string eventName:
                         EventName = $"\"{eventName}\"";
                         break;
                 }

@@ -90,7 +90,7 @@ public class DecoratorGenerator : IIncrementalGenerator
         var interfacesToGenerate = new List<InterfaceToGenerate>();
         // Get the semantic representation of our marker attribute
         INamedTypeSymbol? interfaceMarkerAttribute = compilation.GetTypeByMetadataName(s_decorateAttributeFullName);
-        INamedTypeSymbol? methodMarkerAttribute = compilation.GetTypeByMetadataName(typeof(MethodLogAttribute).FullName);
+        INamedTypeSymbol? methodMarkerAttribute = compilation.GetTypeByMetadataName(typeof(LogMethodAttribute).FullName);
 
         if (interfaceMarkerAttribute == null || methodMarkerAttribute == null)
         {
