@@ -6,7 +6,7 @@ Use `[DecorateWithLogger]` attribute in `Fineboym.Logging.Attributes` namespace 
 
 NuGet: https://www.nuget.org/packages/Fineboym.Logging.Generator/
 
-Currently it supports simple interfaces, only with methods as its members and up to 6 parameters which is what `LoggerMessage.Define` supports (https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.logging.loggermessage.define?view=dotnet-plat-ext-7.0).
+Currently it supports simple interfaces, only with methods as its members and up to 6 parameters in a method which is what `LoggerMessage.Define` supports (https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.logging.loggermessage.define?view=dotnet-plat-ext-7.0).
 Please feel free to open issues for questions, bugs, and improvements and I'll try to address them as soon as I can. Thank you.
 
 If you use .NET dependency injection then you can decorate your service interface. See here for example https://andrewlock.net/adding-decorated-classes-to-the-asp.net-core-di-container-using-scrutor/
