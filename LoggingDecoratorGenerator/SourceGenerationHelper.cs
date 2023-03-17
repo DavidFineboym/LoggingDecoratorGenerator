@@ -6,12 +6,16 @@ namespace Fineboym.Logging.Generator;
 
 internal static class SourceGenerationHelper
 {
+    private static readonly string s_generatedCodeAttribute =
+               $"[global::System.CodeDom.Compiler.GeneratedCodeAttribute(" +
+               $"\"{typeof(SourceGenerationHelper).Assembly.GetName().Name}\", " +
+               $"\"{typeof(SourceGenerationHelper).Assembly.GetName().Version}\")]";
+
     private static readonly SymbolDisplayFormat s_symbolFormat = SymbolDisplayFormat.FullyQualifiedFormat
         .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
 
     public static (string className, string source) GenerateLoggingDecoratorClass(InterfaceToGenerate interfaceToGenerate)
     {
-        // TODO : Add GeneratedCodeAttribute where needed
         // TODO : Generate if log level enabled by myself like .NET and pass false to Define method.
         // new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true }
         // TODO : Check generic interfaces and also generic methods in interfaces. Emit error diagnostic in that case.
@@ -29,6 +33,7 @@ internal static class SourceGenerationHelper
         string interfaceFullName = $"{interfaceToGenerate.Interface}";
         string loggerType = $"global::Microsoft.Extensions.Logging.ILogger<{interfaceFullName}>";
 
+        writer.WriteLine(s_generatedCodeAttribute);
         writer.WriteLine($"{SyntaxFacts.GetText(interfaceToGenerate.Interface.DeclaredAccessibility)} sealed class {className} : {interfaceFullName}");
         writer.WriteLine("{");
         writer.Indent++;

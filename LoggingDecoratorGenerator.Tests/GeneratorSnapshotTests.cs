@@ -10,7 +10,6 @@ public class GeneratorSnapshotTests
         var source = @"
 using System;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Fineboym.Logging.Attributes;
 
 namespace SomeFolder.SomeSubFolder

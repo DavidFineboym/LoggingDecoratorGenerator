@@ -3,6 +3,7 @@
 
 namespace SomeFolder.SomeSubFolder
 {
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Fineboym.Logging.Generator", "1.0.0.0")]
     public sealed class SomeServiceLoggingDecorator : SomeFolder.SomeSubFolder.ISomeService
     {
         private readonly global::Microsoft.Extensions.Logging.ILogger<SomeFolder.SomeSubFolder.ISomeService> _logger;

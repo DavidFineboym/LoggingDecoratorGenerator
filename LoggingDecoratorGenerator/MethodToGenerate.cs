@@ -1,6 +1,5 @@
 ﻿using Fineboym.Logging.Attributes;
 using Microsoft.CodeAnalysis;
-using Microsoft.Extensions.Logging;
 
 namespace Fineboym.Logging.Generator;
 

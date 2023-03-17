@@ -10,13 +10,15 @@
     <LangVersion>Latest</LangVersion>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-    <Version>0.1.0-beta</Version>
+    <Version>1.0.0</Version>
     <Authors>dfineboym</Authors>
-    <Company>dfineboym</Company>
+    <Company></Company>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <AnalysisLevel>preview-all</AnalysisLevel>
     <Title>Logging Decorator Generator</Title>
     <RepositoryUrl>https://github.com/DavidFineboym/LoggingDecoratorGenerator</RepositoryUrl>
+    <PackageTags>logging;generator</PackageTags>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
   </PropertyGroup>
 
   <!-- The following libraries include the source generator interfaces and types we need -->
@@ -28,7 +30,7 @@
   <!-- Reference the attributes from the generator to compile against them -->
   <!-- Ensure we specify PrivateAssets so the NuGet doesn't have any dependencies -->
   <ItemGroup>
-    <ProjectReference Include="..\Fineboym.Logging.Attributes\Fineboym.Logging.Attributes.csproj" PrivateAssets="All"/>
+    <ProjectReference Include="..\Fineboym.Logging.Attributes\Fineboym.Logging.Attributes.csproj" PrivateAssets="All" />
   </ItemGroup>
 	
   <ItemGroup>

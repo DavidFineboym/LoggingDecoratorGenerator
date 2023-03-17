@@ -2,7 +2,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.Extensions.Logging;
 using System.Collections.Immutable;
 using System.Text;
 

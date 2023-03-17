@@ -11,9 +11,9 @@ public class LoggingDecoratorTests
         // Arrange
         using TextWriter textWriter = new StringWriter();
         Console.SetOut(textWriter);
-        ILoggerFactory loggerFactory = LoggerFactory.Create(static builder => builder.AddSimpleConsole());
+        ILoggerFactory loggerFactory = LoggerFactory.Create(static builder => builder.AddSimpleConsole().SetMinimumLevel(LogLevel.Debug));
         ILogger<ISomeService> logger = loggerFactory.CreateLogger<ISomeService>();
-        Assert.True(logger.IsEnabled(LogLevel.Information));
+        Assert.True(logger.IsEnabled(LogLevel.Debug));
         ISomeService fakeService = A.Fake<ISomeService>();
         ISomeService decorator = new SomeServiceLoggingDecorator(logger, fakeService);
         DateTime dateTimeParameter = new(year: 2022, month: 12, day: 12, hour: 22, minute: 57, second: 45, DateTimeKind.Utc);
@@ -29,7 +29,7 @@ public class LoggingDecoratorTests
         textWriter.Flush();
         string? consoleOutput = textWriter.ToString();
         Assert.Equal(
-            "info: LoggingDecoratorGenerator.IntegrationTests.ISomeService[0]\r\n      Entering DateTimeReturningMethod with parameters: someDateTime = 12/12/2022 22:57:45\r\ninfo: LoggingDecoratorGenerator.IntegrationTests.ISomeService[0]\r\n      Method DateTimeReturningMethod returned. Result = 09/06/2020 00:00:00\r\n",
+            "dbug: LoggingDecoratorGenerator.IntegrationTests.ISomeService[-1]\r\n      Entering DateTimeReturningMethod with parameters: someDateTime = 12/12/2022 22:57:45\r\ndbug: LoggingDecoratorGenerator.IntegrationTests.ISomeService[-1]\r\n      Method DateTimeReturningMethod returned. Result = 09/06/2020 00:00:00\r\n",
             consoleOutput);
         Assert.Equal(expected: expectedReturnValue, actual: actualReturn);
         A.CallTo(() => fakeService.DateTimeReturningMethod(dateTimeParameter)).MustHaveHappenedOnceExactly();
