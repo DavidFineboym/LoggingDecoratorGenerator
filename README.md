@@ -4,7 +4,7 @@ Generates logger decorator class for an interface. Uses `Microsoft.Extensions.Lo
 
 Use `[DecorateWithLogger]` attribute in `Fineboym.Logging.Attributes` namespace on an interface. For example, if you have an interface named `ISomeService` and you apply the attribute to it, it will create source generated class named `SomeServiceLoggingDecorator`. If you use Visual Studio, you can see the generated code in Solution Explorer if you expand Dependencies and then Analyzers section:
 
-![image](https://user-images.githubusercontent.com/45399687/226059844-03d90106-9137-4ee2-aa09-4e07e539a316.png)
+![image](https://user-images.githubusercontent.com/45399687/226137973-75c85ad9-7e8f-4891-8ad2-bf3c28e3fb89.png)
 
 NuGet: https://www.nuget.org/packages/Fineboym.Logging.Generator/
 
