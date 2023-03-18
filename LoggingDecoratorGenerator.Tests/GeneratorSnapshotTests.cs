@@ -11,6 +11,7 @@ public class GeneratorSnapshotTests
 using System;
 using System.Threading.Tasks;
 using Fineboym.Logging.Attributes;
+using Microsoft.Extensions.Logging;
 
 namespace SomeFolder.SomeSubFolder
 {

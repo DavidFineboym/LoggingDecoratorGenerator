@@ -9,8 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoggingDecoratorGenerator.T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoggingDecoratorGenerator.IntegrationTests", "LoggingDecoratorGenerator.IntegrationTests\LoggingDecoratorGenerator.IntegrationTests.csproj", "{2DE18598-A5D9-4A34-818A-9680890571C8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fineboym.Logging.Attributes", "Fineboym.Logging.Attributes\Fineboym.Logging.Attributes.csproj", "{53B06864-5681-48AB-976E-85E4B309CDA1}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,10 +27,6 @@ Global
 		{2DE18598-A5D9-4A34-818A-9680890571C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2DE18598-A5D9-4A34-818A-9680890571C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2DE18598-A5D9-4A34-818A-9680890571C8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{53B06864-5681-48AB-976E-85E4B309CDA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{53B06864-5681-48AB-976E-85E4B309CDA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{53B06864-5681-48AB-976E-85E4B309CDA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{53B06864-5681-48AB-976E-85E4B309CDA1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

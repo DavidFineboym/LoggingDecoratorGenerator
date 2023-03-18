@@ -1,5 +1,4 @@
-﻿using Fineboym.Logging.Attributes;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System.Collections.Immutable;
@@ -10,10 +9,18 @@ namespace Fineboym.Logging.Generator;
 [Generator]
 public class DecoratorGenerator : IIncrementalGenerator
 {
-    private static readonly string s_decorateAttributeFullName = typeof(DecorateWithLoggerAttribute).FullName;
+    private const string s_decorateAttributeFullName = "Fineboym.Logging.Attributes.DecorateWithLoggerAttribute";
+    private const string s_logMethodAttributeFullName = "Fineboym.Logging.Attributes.LogMethodAttribute";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
+        // Add the marker attributes to the compilation
+        context.RegisterPostInitializationOutput(ctx =>
+        {
+            ctx.AddSource("DecorateWithLoggerAttribute.g.cs", SourceText.From(SourceGenerationHelper.DecorateWithLoggerAttribute, Encoding.UTF8));
+            ctx.AddSource("LogMethodAttribute.g.cs", SourceText.From(SourceGenerationHelper.LogMethodAttribute, Encoding.UTF8));
+        });
+
         // Do a simple filter for interfaces
         IncrementalValuesProvider<InterfaceDeclarationSyntax> interfaceDeclarations = context.SyntaxProvider
             .CreateSyntaxProvider(
@@ -89,7 +96,7 @@ public class DecoratorGenerator : IIncrementalGenerator
         var interfacesToGenerate = new List<InterfaceToGenerate>();
         // Get the semantic representation of our marker attribute
         INamedTypeSymbol? interfaceMarkerAttribute = compilation.GetTypeByMetadataName(s_decorateAttributeFullName);
-        INamedTypeSymbol? methodMarkerAttribute = compilation.GetTypeByMetadataName(typeof(LogMethodAttribute).FullName);
+        INamedTypeSymbol? methodMarkerAttribute = compilation.GetTypeByMetadataName(s_logMethodAttributeFullName);
 
         if (interfaceMarkerAttribute == null || methodMarkerAttribute == null)
         {
@@ -157,9 +164,21 @@ public class DecoratorGenerator : IIncrementalGenerator
                 return null;
             }
 
-            return $"global::Microsoft.Extensions.Logging.LogLevel.{(LogLevel)value}";
+            return $"global::Microsoft.Extensions.Logging.LogLevel.{ConvertLogLevel(value)}";
         }
 
         return null;
     }
+
+    public static string ConvertLogLevel(int value) => value switch
+    {
+        0 => "Trace",
+        1 => "Debug",
+        2 => "Information",
+        3 => "Warning",
+        4 => "Error",
+        5 => "Critical",
+        6 => "None",
+        _ => value.ToString()
+    };
 }

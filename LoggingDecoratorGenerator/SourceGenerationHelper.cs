@@ -14,6 +14,44 @@ internal static class SourceGenerationHelper
     private static readonly SymbolDisplayFormat s_symbolFormat = SymbolDisplayFormat.FullyQualifiedFormat
         .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
 
+    public const string DecorateWithLoggerAttribute = @"#nullable enable
+namespace Fineboym.Logging.Attributes
+{
+    [System.AttributeUsage(System.AttributeTargets.Interface, AllowMultiple = false, Inherited = false)]
+    internal sealed class DecorateWithLoggerAttribute : System.Attribute
+    {
+        public Microsoft.Extensions.Logging.LogLevel Level { get; }
+
+        public DecorateWithLoggerAttribute(Microsoft.Extensions.Logging.LogLevel level = Microsoft.Extensions.Logging.LogLevel.Debug)
+        {
+            Level = level;
+        }
+    }
+}";
+
+    public const string LogMethodAttribute = @"#nullable enable
+namespace Fineboym.Logging.Attributes
+{
+    [System.AttributeUsage(System.AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+    internal sealed class LogMethodAttribute : System.Attribute
+    {
+        public Microsoft.Extensions.Logging.LogLevel Level { get; set; } = Microsoft.Extensions.Logging.LogLevel.None;
+
+        /// <summary>
+        /// Gets the logging event id for the logging method.
+        /// </summary>
+        public int EventId { get; set; } = -1;
+
+        /// <summary>
+        /// Gets or sets the logging event name for the logging method.
+        /// </summary>
+        /// <remarks>
+        /// This will equal the method name if not specified.
+        /// </remarks>
+        public string? EventName { get; set; }
+    }
+}";
+
     public static (string className, string source) GenerateLoggingDecoratorClass(InterfaceToGenerate interfaceToGenerate)
     {
         // TODO : Generate if log level enabled by myself like .NET and pass false to Define method.

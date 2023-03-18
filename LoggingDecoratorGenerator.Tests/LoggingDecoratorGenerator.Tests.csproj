@@ -14,6 +14,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.5.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
     <PackageReference Include="Verify.SourceGenerators" Version="2.1.0" />
     <PackageReference Include="Verify.Xunit" Version="19.10.0" />
@@ -29,7 +30,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Fineboym.Logging.Attributes\Fineboym.Logging.Attributes.csproj" />
     <ProjectReference Include="..\LoggingDecoratorGenerator\Fineboym.Logging.Generator.csproj" />
   </ItemGroup>
 

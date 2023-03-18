@@ -1,4 +1,5 @@
 ﻿using Fineboym.Logging.Attributes;
+using Microsoft.Extensions.Logging;
 
 namespace LoggingDecoratorGenerator.IntegrationTests;
 

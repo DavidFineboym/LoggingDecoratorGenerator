@@ -1,5 +1,4 @@
-﻿using Fineboym.Logging.Attributes;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 
 namespace Fineboym.Logging.Generator;
 
@@ -44,13 +43,13 @@ internal class MethodToGenerate
 
                 switch (arg.Key)
                 {
-                    case nameof(LogMethodAttribute.Level) when typedConstant.Value is int logLevel:
-                        LogLevel = $"global::Microsoft.Extensions.Logging.LogLevel.{(LogLevel)logLevel}";
+                    case "Level" when typedConstant.Value is int logLevel:
+                        LogLevel = $"global::Microsoft.Extensions.Logging.LogLevel.{DecoratorGenerator.ConvertLogLevel(logLevel)}";
                         break;
-                    case nameof(LogMethodAttribute.EventId) when typedConstant.Value is int eventId:
+                    case "EventId" when typedConstant.Value is int eventId:
                         EventId = eventId.ToString();
                         break;
-                    case nameof(LogMethodAttribute.EventName) when typedConstant.Value is string eventName:
+                    case "EventName" when typedConstant.Value is string eventName:
                         EventName = $"\"{eventName}\"";
                         break;
                 }

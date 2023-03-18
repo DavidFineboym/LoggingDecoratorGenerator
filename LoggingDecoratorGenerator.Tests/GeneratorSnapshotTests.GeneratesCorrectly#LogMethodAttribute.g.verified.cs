@@ -1,11 +1,11 @@
-﻿using System;
-
+﻿//HintName: LogMethodAttribute.g.cs
+#nullable enable
 namespace Fineboym.Logging.Attributes
 {
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
-    public sealed class LogMethodAttribute : Attribute
+    [System.AttributeUsage(System.AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+    internal sealed class LogMethodAttribute : System.Attribute
     {
-        public LogLevel Level { get; set; } = LogLevel.None;
+        public Microsoft.Extensions.Logging.LogLevel Level { get; set; } = Microsoft.Extensions.Logging.LogLevel.None;
 
         /// <summary>
         /// Gets the logging event id for the logging method.

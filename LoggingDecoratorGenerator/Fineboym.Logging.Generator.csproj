@@ -1,16 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- 👇 Source generators must target netstandard 2.0 -->
     <TargetFramework>netstandard2.0</TargetFramework>
-    <!-- 👇 We don't want to reference the source generator dll directly in consuming projects -->
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <Nullable>enable</Nullable>
     <ImplicitUsings>true</ImplicitUsings>
     <LangVersion>Latest</LangVersion>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <Authors>dfineboym</Authors>
     <Company></Company>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
@@ -22,27 +20,13 @@
     <Description>Generates logger decorator class for an interface. Uses Microsoft.Extensions.Logging.ILogger&lt;{Your interface}&gt; to log and requires it in decorator class constructor.</Description>
   </PropertyGroup>
 
-  <!-- The following libraries include the source generator interfaces and types we need -->
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.5.0" PrivateAssets="all" />
   </ItemGroup>
-
-  <!-- Reference the attributes from the generator to compile against them -->
-  <!-- Ensure we specify PrivateAssets so the NuGet doesn't have any dependencies -->
-  <ItemGroup>
-    <ProjectReference Include="..\Fineboym.Logging.Attributes\Fineboym.Logging.Attributes.csproj" PrivateAssets="All" />
-  </ItemGroup>
 	
   <ItemGroup>
-	<!-- This ensures the library will be packaged as a source generator when we use `dotnet pack` -->
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-  
-    <!-- Pack the attributes dll in the analyzers/dotnet/cs path -->
-    <None Include="$(OutputPath)\Fineboym.Logging.Attributes.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-
-    <!-- Pack the attributes dll in the lib\netstandard2.0 path -->
-    <None Include="$(OutputPath)\Fineboym.Logging.Attributes.dll" Pack="true" PackagePath="lib\netstandard2.0" Visible="true" />
   </ItemGroup>
   
 </Project>
