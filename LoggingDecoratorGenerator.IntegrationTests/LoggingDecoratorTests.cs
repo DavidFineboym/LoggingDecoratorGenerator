@@ -29,7 +29,7 @@ public class LoggingDecoratorTests
         textWriter.Flush();
         string? consoleOutput = textWriter.ToString();
         Assert.Equal(
-            "dbug: LoggingDecoratorGenerator.IntegrationTests.ISomeService[-1]\r\n      Entering DateTimeReturningMethod with parameters: someDateTime = 12/12/2022 22:57:45\r\ndbug: LoggingDecoratorGenerator.IntegrationTests.ISomeService[-1]\r\n      Method DateTimeReturningMethod returned. Result = 09/06/2020 00:00:00\r\n",
+            $"dbug: LoggingDecoratorGenerator.IntegrationTests.ISomeService[-1]{Environment.NewLine}      Entering DateTimeReturningMethod with parameters: someDateTime = 12/12/2022 22:57:45{Environment.NewLine}dbug: LoggingDecoratorGenerator.IntegrationTests.ISomeService[-1]{Environment.NewLine}      Method DateTimeReturningMethod returned. Result = 09/06/2020 00:00:00{Environment.NewLine}",
             consoleOutput);
         Assert.Equal(expected: expectedReturnValue, actual: actualReturn);
         A.CallTo(() => fakeService.DateTimeReturningMethod(dateTimeParameter)).MustHaveHappenedOnceExactly();
@@ -59,7 +59,7 @@ public class LoggingDecoratorTests
         textWriter.Flush();
         string? consoleOutput = textWriter.ToString();
         Assert.Equal(
-            "info: LoggingDecoratorGenerator.IntegrationTests.ISomeService[0]\r\n      Entering StringReturningAsyncMethod with parameters: s = SomeInputParameter\r\ninfo: LoggingDecoratorGenerator.IntegrationTests.ISomeService[0]\r\n      Method StringReturningAsyncMethod returned. Result = SomeReturnValue\r\n",
+            $"info: LoggingDecoratorGenerator.IntegrationTests.ISomeService[0]{Environment.NewLine}      Entering StringReturningAsyncMethod with parameters: s = SomeInputParameter{Environment.NewLine}info: LoggingDecoratorGenerator.IntegrationTests.ISomeService[0]{Environment.NewLine}      Method StringReturningAsyncMethod returned. Result = SomeReturnValue{Environment.NewLine}",
             consoleOutput);
         Assert.Equal(expected: expectedReturnValue, actual: actualReturn);
         A.CallTo(() => fakeService.StringReturningAsyncMethod(inputParameter)).MustHaveHappenedOnceExactly();

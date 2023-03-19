@@ -77,16 +77,16 @@ namespace Fineboym.Logging.Attributes
         writer.Indent++;
         writer.WriteLine($"private readonly {loggerType} _logger;");
         writer.WriteLine($"private readonly {interfaceFullName} _decorated;");
-        writer.WriteLine();
+        WriteEmptyLine();
 
         AppendConstructor(writer, className, interfaceFullName, loggerType);
 
         foreach (MethodToGenerate methodToGenerate in interfaceToGenerate.Methods)
         {
-            writer.WriteLine();
+            WriteEmptyLine();
             string loggerDelegateBeforeVariable = AppendLoggerMessageDefineForBeforeCall(writer, methodToGenerate);
             string loggerDelegateAfterVariable = AppendLoggerMessageDefineForAfterCall(writer, methodToGenerate);
-            writer.WriteLine();
+            WriteEmptyLine();
             AppendMethod(writer, methodToGenerate, loggerDelegateBeforeVariable, loggerDelegateAfterVariable);
         }
 
@@ -98,6 +98,14 @@ namespace Fineboym.Logging.Attributes
         writer.Flush();
 
         return (className, stringWriter.ToString());
+
+        void WriteEmptyLine()
+        {
+            var indent = writer.Indent;
+            writer.Indent = 0;
+            writer.WriteLine();
+            writer.Indent = indent;
+        }
     }
 
     private static void AppendConstructor(IndentedTextWriter writer, string className, string interfaceFullName, string loggerType)
