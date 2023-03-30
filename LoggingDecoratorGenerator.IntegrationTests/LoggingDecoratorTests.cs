@@ -1,5 +1,7 @@
 using FakeItEasy;
 using Microsoft.Extensions.Logging;
+using OtherFolder.OtherSubFolder;
+using System.Text.Json;
 
 namespace LoggingDecoratorGenerator.IntegrationTests;
 
@@ -63,5 +65,134 @@ public class LoggingDecoratorTests
             consoleOutput);
         Assert.Equal(expected: expectedReturnValue, actual: actualReturn);
         A.CallTo(() => fakeService.StringReturningAsyncMethod(inputParameter)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task IInformationLevelInterface_MethodWithoutAttribute()
+    {
+        // Arrange
+        using TextWriter textWriter = new StringWriter();
+        Console.SetOut(textWriter);
+        ILoggerFactory loggerFactory = LoggerFactory.Create(static builder => builder.AddJsonConsole(options =>
+        {
+            options.JsonWriterOptions = new JsonWriterOptions
+            {
+                Indented = true
+            };
+        }));
+        ILogger<IInformationLevelInterface> logger = loggerFactory.CreateLogger<IInformationLevelInterface>();
+        Assert.True(logger.IsEnabled(LogLevel.Information));
+        Assert.False(logger.IsEnabled(LogLevel.Debug));
+        IInformationLevelInterface fakeService = A.Fake<IInformationLevelInterface>();
+        IInformationLevelInterface decorator = new InformationLevelInterfaceLoggingDecorator(logger, fakeService);
+        int x = 42;
+        int y = 43;
+        float expectedReturnValue = 42.43f;
+        A.CallTo(() => fakeService.MethodWithoutAttribute(x, y)).Returns(expectedReturnValue);
+
+        // Act
+        float actualReturn = await decorator.MethodWithoutAttribute(x, y);
+
+        // Assert
+        // Must Dispose to flush the logger
+        loggerFactory.Dispose();
+        textWriter.Flush();
+        string? consoleOutput = textWriter.ToString();
+
+        string expectedConsoleOutput = """
+            {
+              "EventId": -1,
+              "LogLevel": "Information",
+              "Category": "LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface",
+              "Message": "Entering MethodWithoutAttribute with parameters: x = 42, y = 43",
+              "State": {
+                "Message": "Entering MethodWithoutAttribute with parameters: x = 42, y = 43",
+                "x": 42,
+                "y": 43,
+                "{OriginalFormat}": "Entering MethodWithoutAttribute with parameters: x = {x}, y = {y}"
+              }
+            }
+            {
+              "EventId": -1,
+              "LogLevel": "Information",
+              "Category": "LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface",
+              "Message": "Method MethodWithoutAttribute returned. Result = 42.43",
+              "State": {
+                "Message": "Method MethodWithoutAttribute returned. Result = 42.43",
+                "result": 42.43,
+                "{OriginalFormat}": "Method MethodWithoutAttribute returned. Result = {result}"
+              }
+            }
+            
+            """.ReplaceLineEndings();
+        Assert.Equal(expected: expectedConsoleOutput, actual: consoleOutput);
+
+        Assert.Equal(expected: expectedReturnValue, actual: actualReturn);
+        A.CallTo(() => fakeService.MethodWithoutAttribute(x, y)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public void IInformationLevelInterface_MethodWithAttribute()
+    {
+        // Arrange
+        using TextWriter textWriter = new StringWriter();
+        Console.SetOut(textWriter);
+        ILoggerFactory loggerFactory = LoggerFactory.Create(static builder => builder.AddJsonConsole(options =>
+        {
+            options.JsonWriterOptions = new JsonWriterOptions
+            {
+                Indented = true
+            };
+        }).SetMinimumLevel(LogLevel.Debug));
+
+        ILogger<IInformationLevelInterface> logger = loggerFactory.CreateLogger<IInformationLevelInterface>();
+        Assert.True(logger.IsEnabled(LogLevel.Debug));
+        Assert.False(logger.IsEnabled(LogLevel.Trace));
+        IInformationLevelInterface fakeService = A.Fake<IInformationLevelInterface>();
+        IInformationLevelInterface decorator = new InformationLevelInterfaceLoggingDecorator(logger, fakeService);
+        Person firstInput = new("foo", 30);
+        int secondInput = 33;
+        Person expectedReturnValue = new("bar", 42);
+        A.CallTo(() => fakeService.MethodWithAttribute(firstInput, secondInput)).Returns(expectedReturnValue);
+
+        // Act
+        Person actualReturn = decorator.MethodWithAttribute(firstInput, secondInput);
+
+        // Assert
+        // Must Dispose to flush the logger
+        loggerFactory.Dispose();
+        textWriter.Flush();
+        string? consoleOutput = textWriter.ToString();
+
+        string expectedConsoleOutput = """
+            {
+              "EventId": 100,
+              "LogLevel": "Debug",
+              "Category": "LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface",
+              "Message": "Entering MethodWithAttribute with parameters: person = Person { Name = foo, Age = 30 }, someNumber = 33",
+              "State": {
+                "Message": "Entering MethodWithAttribute with parameters: person = Person { Name = foo, Age = 30 }, someNumber = 33",
+                "person": "Person { Name = foo, Age = 30 }",
+                "someNumber": 33,
+                "{OriginalFormat}": "Entering MethodWithAttribute with parameters: person = {person}, someNumber = {someNumber}"
+              }
+            }
+            {
+              "EventId": 100,
+              "LogLevel": "Debug",
+              "Category": "LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface",
+              "Message": "Method MethodWithAttribute returned. Result = Person { Name = bar, Age = 42 }",
+              "State": {
+                "Message": "Method MethodWithAttribute returned. Result = Person { Name = bar, Age = 42 }",
+                "result": "Person { Name = bar, Age = 42 }",
+                "{OriginalFormat}": "Method MethodWithAttribute returned. Result = {result}"
+              }
+            }
+            
+            """.ReplaceLineEndings();
+        Assert.Equal(expected: expectedConsoleOutput, actual: consoleOutput);
+
+        Assert.Equal(expected: expectedReturnValue, actual: actualReturn);
+        A.CallTo(() => fakeService.MethodWithAttribute(firstInput, secondInput)).MustHaveHappenedOnceExactly();
     }
 }
