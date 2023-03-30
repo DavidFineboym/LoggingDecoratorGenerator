@@ -11,6 +11,8 @@ namespace LoggingDecoratorGenerator.IntegrationTests
 
         [LogMethod(Level = LogLevel.Debug, EventName = "SomePersonEventName", EventId = 100)]
         Person MethodWithAttribute(Person person, int someNumber);
+
+        void MethodShouldNotBeLoggedBecauseOfLogLevel();
     }
 }
 

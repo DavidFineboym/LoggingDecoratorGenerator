@@ -15,66 +15,102 @@ namespace SomeFolder.SomeSubFolder
             _decorated = decorated;
         }
 
-        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Exception?> s_beforeVoidParameterlessMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define(global::Microsoft.Extensions.Logging.LogLevel.Trace, new global::Microsoft.Extensions.Logging.EventId(101, "foo"), "Entering VoidParameterlessMethod");
-        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Exception?> s_afterVoidParameterlessMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define(global::Microsoft.Extensions.Logging.LogLevel.Trace, new global::Microsoft.Extensions.Logging.EventId(101, "foo"), "Method VoidParameterlessMethod returned");
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Exception?> s_beforeVoidParameterlessMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define(global::Microsoft.Extensions.Logging.LogLevel.Trace, new global::Microsoft.Extensions.Logging.EventId(101, "foo"), "Entering VoidParameterlessMethod", new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Exception?> s_afterVoidParameterlessMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define(global::Microsoft.Extensions.Logging.LogLevel.Trace, new global::Microsoft.Extensions.Logging.EventId(101, "foo"), "Method VoidParameterlessMethod returned", new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
 
-        public global::System.Void VoidParameterlessMethod()
+        public void VoidParameterlessMethod()
         {
-            s_beforeVoidParameterlessMethod(_logger, null);
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Trace))
+            {
+                s_beforeVoidParameterlessMethod(_logger, null);
+            }
             _decorated.VoidParameterlessMethod();
-            s_afterVoidParameterlessMethod(_logger, null);
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Trace))
+            {
+                s_afterVoidParameterlessMethod(_logger, null);
+            }
         }
 
-        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Int32, global::OtherFolder.OtherSubFolder.Person, global::System.Exception?> s_beforeIntReturningMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define<global::System.Int32, global::OtherFolder.OtherSubFolder.Person>(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(IntReturningMethod)), "Entering IntReturningMethod with parameters: x = {x}, person = {person}");
-        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Int32, global::System.Exception?> s_afterIntReturningMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define<global::System.Int32>(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(IntReturningMethod)), "Method IntReturningMethod returned. Result = {result}");
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, int, global::OtherFolder.OtherSubFolder.Person, global::System.Exception?> s_beforeIntReturningMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define<int, global::OtherFolder.OtherSubFolder.Person>(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(IntReturningMethod)), "Entering IntReturningMethod with parameters: x = {x}, person = {person}", new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, int, global::System.Exception?> s_afterIntReturningMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define<int>(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(IntReturningMethod)), "Method IntReturningMethod returned. Result = {result}", new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
 
-        public global::System.Int32 IntReturningMethod(global::System.Int32 x, global::OtherFolder.OtherSubFolder.Person person)
+        public int IntReturningMethod(int x, global::OtherFolder.OtherSubFolder.Person person)
         {
-            s_beforeIntReturningMethod(_logger, x, person, null);
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            {
+                s_beforeIntReturningMethod(_logger, x, person, null);
+            }
             var result = _decorated.IntReturningMethod(x, person);
-            s_afterIntReturningMethod(_logger, result, null);
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            {
+                s_afterIntReturningMethod(_logger, result, null);
+            }
             return result;
         }
 
-        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Int32, global::System.Int32, global::System.Exception?> s_beforeTaskReturningAsyncMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define<global::System.Int32, global::System.Int32>(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(TaskReturningAsyncMethod)), "Entering TaskReturningAsyncMethod with parameters: x = {x}, y = {y}");
-        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Exception?> s_afterTaskReturningAsyncMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(TaskReturningAsyncMethod)), "Method TaskReturningAsyncMethod returned");
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, int, int, global::System.Exception?> s_beforeTaskReturningAsyncMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define<int, int>(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(TaskReturningAsyncMethod)), "Entering TaskReturningAsyncMethod with parameters: x = {x}, y = {y}", new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Exception?> s_afterTaskReturningAsyncMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(TaskReturningAsyncMethod)), "Method TaskReturningAsyncMethod returned", new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
 
-        public async global::System.Threading.Tasks.Task TaskReturningAsyncMethod(global::System.Int32 x, global::System.Int32 y)
+        public async global::System.Threading.Tasks.Task TaskReturningAsyncMethod(int x, int y)
         {
-            s_beforeTaskReturningAsyncMethod(_logger, x, y, null);
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            {
+                s_beforeTaskReturningAsyncMethod(_logger, x, y, null);
+            }
             await _decorated.TaskReturningAsyncMethod(x, y).ConfigureAwait(false);
-            s_afterTaskReturningAsyncMethod(_logger, null);
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            {
+                s_afterTaskReturningAsyncMethod(_logger, null);
+            }
         }
 
-        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Int32, global::System.Int32, global::System.Exception?> s_beforeTaskIntReturningAsyncMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define<global::System.Int32, global::System.Int32>(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(TaskIntReturningAsyncMethod)), "Entering TaskIntReturningAsyncMethod with parameters: x = {x}, y = {y}");
-        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Int32, global::System.Exception?> s_afterTaskIntReturningAsyncMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define<global::System.Int32>(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(TaskIntReturningAsyncMethod)), "Method TaskIntReturningAsyncMethod returned. Result = {result}");
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, int, int, global::System.Exception?> s_beforeTaskIntReturningAsyncMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define<int, int>(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(TaskIntReturningAsyncMethod)), "Entering TaskIntReturningAsyncMethod with parameters: x = {x}, y = {y}", new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, int, global::System.Exception?> s_afterTaskIntReturningAsyncMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define<int>(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(TaskIntReturningAsyncMethod)), "Method TaskIntReturningAsyncMethod returned. Result = {result}", new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
 
-        public async global::System.Threading.Tasks.Task<global::System.Int32> TaskIntReturningAsyncMethod(global::System.Int32 x, global::System.Int32 y)
+        public async global::System.Threading.Tasks.Task<int> TaskIntReturningAsyncMethod(int x, int y)
         {
-            s_beforeTaskIntReturningAsyncMethod(_logger, x, y, null);
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            {
+                s_beforeTaskIntReturningAsyncMethod(_logger, x, y, null);
+            }
             var result = await _decorated.TaskIntReturningAsyncMethod(x, y).ConfigureAwait(false);
-            s_afterTaskIntReturningAsyncMethod(_logger, result, null);
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            {
+                s_afterTaskIntReturningAsyncMethod(_logger, result, null);
+            }
             return result;
         }
 
-        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Int32, global::System.Int32, global::System.Exception?> s_beforeValueTaskReturningAsyncMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define<global::System.Int32, global::System.Int32>(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(ValueTaskReturningAsyncMethod)), "Entering ValueTaskReturningAsyncMethod with parameters: x = {x}, y = {y}");
-        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Exception?> s_afterValueTaskReturningAsyncMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(ValueTaskReturningAsyncMethod)), "Method ValueTaskReturningAsyncMethod returned");
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, int, int, global::System.Exception?> s_beforeValueTaskReturningAsyncMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define<int, int>(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(ValueTaskReturningAsyncMethod)), "Entering ValueTaskReturningAsyncMethod with parameters: x = {x}, y = {y}", new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Exception?> s_afterValueTaskReturningAsyncMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(ValueTaskReturningAsyncMethod)), "Method ValueTaskReturningAsyncMethod returned", new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
 
-        public async global::System.Threading.Tasks.ValueTask ValueTaskReturningAsyncMethod(global::System.Int32 x, global::System.Int32 y)
+        public async global::System.Threading.Tasks.ValueTask ValueTaskReturningAsyncMethod(int x, int y)
         {
-            s_beforeValueTaskReturningAsyncMethod(_logger, x, y, null);
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            {
+                s_beforeValueTaskReturningAsyncMethod(_logger, x, y, null);
+            }
             await _decorated.ValueTaskReturningAsyncMethod(x, y).ConfigureAwait(false);
-            s_afterValueTaskReturningAsyncMethod(_logger, null);
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            {
+                s_afterValueTaskReturningAsyncMethod(_logger, null);
+            }
         }
 
-        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Int32, global::System.Int32, global::System.Exception?> s_beforeValueTaskFloatReturningAsyncMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define<global::System.Int32, global::System.Int32>(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(ValueTaskFloatReturningAsyncMethod)), "Entering ValueTaskFloatReturningAsyncMethod with parameters: x = {x}, y = {y}");
-        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Single, global::System.Exception?> s_afterValueTaskFloatReturningAsyncMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define<global::System.Single>(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(ValueTaskFloatReturningAsyncMethod)), "Method ValueTaskFloatReturningAsyncMethod returned. Result = {result}");
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, int, int, global::System.Exception?> s_beforeValueTaskFloatReturningAsyncMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define<int, int>(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(ValueTaskFloatReturningAsyncMethod)), "Entering ValueTaskFloatReturningAsyncMethod with parameters: x = {x}, y = {y}", new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, float, global::System.Exception?> s_afterValueTaskFloatReturningAsyncMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define<float>(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(ValueTaskFloatReturningAsyncMethod)), "Method ValueTaskFloatReturningAsyncMethod returned. Result = {result}", new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
 
-        public async global::System.Threading.Tasks.ValueTask<global::System.Single> ValueTaskFloatReturningAsyncMethod(global::System.Int32 x, global::System.Int32 y)
+        public async global::System.Threading.Tasks.ValueTask<float> ValueTaskFloatReturningAsyncMethod(int x, int y)
         {
-            s_beforeValueTaskFloatReturningAsyncMethod(_logger, x, y, null);
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            {
+                s_beforeValueTaskFloatReturningAsyncMethod(_logger, x, y, null);
+            }
             var result = await _decorated.ValueTaskFloatReturningAsyncMethod(x, y).ConfigureAwait(false);
-            s_afterValueTaskFloatReturningAsyncMethod(_logger, result, null);
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            {
+                s_afterValueTaskFloatReturningAsyncMethod(_logger, result, null);
+            }
             return result;
         }
     }

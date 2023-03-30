@@ -12,7 +12,7 @@ internal static class SourceGenerationHelper
                $"\"{typeof(SourceGenerationHelper).Assembly.GetName().Version}\")]";
 
     private static readonly SymbolDisplayFormat s_symbolFormat = SymbolDisplayFormat.FullyQualifiedFormat
-        .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
+        .AddMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
 
     public const string DecorateWithLoggerAttribute = @"#nullable enable
 namespace Fineboym.Logging.Attributes
@@ -54,8 +54,6 @@ namespace Fineboym.Logging.Attributes
 
     public static (string className, string source) GenerateLoggingDecoratorClass(InterfaceToGenerate interfaceToGenerate)
     {
-        // TODO : Generate if log level enabled by myself like .NET and pass false to Define method.
-        // new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true }
         // TODO : Check generic interfaces and also generic methods in interfaces. Emit error diagnostic in that case.
         // TODO : Check non-public access modifiers
         using StringWriter stringWriter = new();
@@ -77,16 +75,16 @@ namespace Fineboym.Logging.Attributes
         writer.Indent++;
         writer.WriteLine($"private readonly {loggerType} _logger;");
         writer.WriteLine($"private readonly {interfaceFullName} _decorated;");
-        WriteEmptyLine();
+        writer.WriteLineNoTabs(null);
 
         AppendConstructor(writer, className, interfaceFullName, loggerType);
 
         foreach (MethodToGenerate methodToGenerate in interfaceToGenerate.Methods)
         {
-            WriteEmptyLine();
+            writer.WriteLineNoTabs(null);
             string loggerDelegateBeforeVariable = AppendLoggerMessageDefineForBeforeCall(writer, methodToGenerate);
             string loggerDelegateAfterVariable = AppendLoggerMessageDefineForAfterCall(writer, methodToGenerate);
-            WriteEmptyLine();
+            writer.WriteLineNoTabs(null);
             AppendMethod(writer, methodToGenerate, loggerDelegateBeforeVariable, loggerDelegateAfterVariable);
         }
 
@@ -98,14 +96,6 @@ namespace Fineboym.Logging.Attributes
         writer.Flush();
 
         return (className, stringWriter.ToString());
-
-        void WriteEmptyLine()
-        {
-            var indent = writer.Indent;
-            writer.Indent = 0;
-            writer.WriteLine();
-            writer.Indent = indent;
-        }
     }
 
     private static void AppendConstructor(IndentedTextWriter writer, string className, string interfaceFullName, string loggerType)
@@ -138,21 +128,9 @@ namespace Fineboym.Logging.Attributes
         writer.WriteLine(")");
         writer.WriteLine("{");
         writer.Indent++;
-        writer.Write($"{loggerDelegateBeforeVariable}(_logger, ");
-        for (int i = 0; i < method.Parameters.Length; i++)
-        {
-            IParameterSymbol parameter = method.Parameters[i];
-            writer.Write($"{parameter.Name}");
-            if (i < method.Parameters.Length - 1)
-            {
-                writer.Write(", ");
-            }
-            else if (i == method.Parameters.Length - 1)
-            {
-                writer.Write(", ");
-            }
-        }
-        writer.WriteLine("null);");
+
+        AppendBeforeMethodSection(writer, loggerDelegateBeforeVariable, methodToGenerate);
+
         if (hasReturnValue)
         {
             writer.Write("var result = ");
@@ -179,18 +157,71 @@ namespace Fineboym.Logging.Attributes
         }
         writer.WriteLine(';');
 
+        AppendAfterMethodSection(writer, loggerDelegateAfterVariable, methodToGenerate);
+
+        writer.Indent--;
+        writer.WriteLine("}");
+    }
+
+    private static void AppendBeforeMethodSection(IndentedTextWriter writer, string loggerDelegateBeforeVariable, MethodToGenerate methodToGenerate)
+    {
+        writer.WriteLine($"if (_logger.IsEnabled({methodToGenerate.LogLevel}))");
+        writer.StartBlock();
+
+        IMethodSymbol method = methodToGenerate.MethodSymbol;
+
+        writer.Write($"{loggerDelegateBeforeVariable}(_logger, ");
+        for (int i = 0; i < method.Parameters.Length; i++)
+        {
+            IParameterSymbol parameter = method.Parameters[i];
+            writer.Write($"{parameter.Name}");
+            if (i < method.Parameters.Length - 1)
+            {
+                writer.Write(", ");
+            }
+            else if (i == method.Parameters.Length - 1)
+            {
+                writer.Write(", ");
+            }
+        }
+        writer.WriteLine("null);");
+
+        writer.EndBlock();
+    }
+
+    private static void AppendAfterMethodSection(IndentedTextWriter writer, string loggerDelegateAfterVariable, MethodToGenerate methodToGenerate)
+    {
+        writer.WriteLine($"if (_logger.IsEnabled({methodToGenerate.LogLevel}))");
+        writer.StartBlock();
+
         writer.Write($"{loggerDelegateAfterVariable}(_logger, ");
-        if (hasReturnValue)
+        if (methodToGenerate.HasReturnValue)
         {
             writer.WriteLine("result, null);");
-            writer.WriteLine("return result;");
         }
         else
         {
             writer.WriteLine("null);");
         }
+
+        writer.EndBlock();
+
+        if (methodToGenerate.HasReturnValue)
+        {
+            writer.WriteLine("return result;");
+        }
+    }
+
+    private static void StartBlock(this IndentedTextWriter writer)
+    {
+        writer.WriteLine('{');
+        writer.Indent++;
+    }
+
+    private static void EndBlock(this IndentedTextWriter writer)
+    {
         writer.Indent--;
-        writer.WriteLine("}");
+        writer.WriteLine('}');
     }
 
     /// <summary>
@@ -222,7 +253,8 @@ namespace Fineboym.Logging.Attributes
                 writer.Write(", ");
             }
         }
-        writer.WriteLine("\");");
+        writer.Write("\", ");
+        FinishByLogDefineOptions(writer);
 
         return loggerVariable;
     }
@@ -244,7 +276,8 @@ namespace Fineboym.Logging.Attributes
         {
             writer.Write(". Result = {result}");
         }
-        writer.WriteLine("\");");
+        writer.Write("\", ");
+        FinishByLogDefineOptions(writer);
 
         return loggerVariable;
     }
@@ -282,4 +315,7 @@ namespace Fineboym.Logging.Attributes
         }
         writer.Write($"({methodToGenerate.LogLevel}, new global::Microsoft.Extensions.Logging.EventId({methodToGenerate.EventId}, {methodToGenerate.EventName}), ");
     }
+
+    private static void FinishByLogDefineOptions(IndentedTextWriter writer) =>
+        writer.WriteLine("new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });");
 }

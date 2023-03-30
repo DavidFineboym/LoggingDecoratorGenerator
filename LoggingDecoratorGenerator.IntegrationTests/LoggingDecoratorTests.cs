@@ -195,4 +195,39 @@ public class LoggingDecoratorTests
         Assert.Equal(expected: expectedReturnValue, actual: actualReturn);
         A.CallTo(() => fakeService.MethodWithAttribute(firstInput, secondInput)).MustHaveHappenedOnceExactly();
     }
+
+    [Fact]
+    public void IInformationLevelInterface_MethodShouldNotBeLoggedBecauseOfLogLevel()
+    {
+        // Arrange
+        using TextWriter textWriter = new StringWriter();
+        Console.SetOut(textWriter);
+        ILoggerFactory loggerFactory = LoggerFactory.Create(static builder => builder.AddJsonConsole(options =>
+        {
+            options.JsonWriterOptions = new JsonWriterOptions
+            {
+                Indented = true
+            };
+        }).SetMinimumLevel(LogLevel.Warning));
+
+        ILogger<IInformationLevelInterface> logger = loggerFactory.CreateLogger<IInformationLevelInterface>();
+        Assert.True(logger.IsEnabled(LogLevel.Warning));
+        Assert.False(logger.IsEnabled(LogLevel.Information));
+        IInformationLevelInterface fakeService = A.Fake<IInformationLevelInterface>();
+        IInformationLevelInterface decorator = new InformationLevelInterfaceLoggingDecorator(logger, fakeService);
+        A.CallTo(() => fakeService.MethodShouldNotBeLoggedBecauseOfLogLevel()).DoesNothing();
+
+        // Act
+        decorator.MethodShouldNotBeLoggedBecauseOfLogLevel();
+
+        // Assert
+        // Must Dispose to flush the logger
+        loggerFactory.Dispose();
+        textWriter.Flush();
+        string? consoleOutput = textWriter.ToString();
+
+        Assert.Equal(expected: string.Empty, actual: consoleOutput);
+
+        A.CallTo(() => fakeService.MethodShouldNotBeLoggedBecauseOfLogLevel()).MustHaveHappenedOnceExactly();
+    }
 }
