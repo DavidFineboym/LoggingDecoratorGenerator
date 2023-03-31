@@ -28,7 +28,7 @@ public class LoggingDecoratorTests
         // Assert
         // Must Dispose to flush the logger
         loggerFactory.Dispose();
-        textWriter.Flush();
+        Console.Out.Flush();
         string? consoleOutput = textWriter.ToString();
         Assert.Equal(
             $"dbug: LoggingDecoratorGenerator.IntegrationTests.ISomeService[-1]{Environment.NewLine}      Entering DateTimeReturningMethod with parameters: someDateTime = 12/12/2022 22:57:45{Environment.NewLine}dbug: LoggingDecoratorGenerator.IntegrationTests.ISomeService[-1]{Environment.NewLine}      Method DateTimeReturningMethod returned. Result = 09/06/2020 00:00:00{Environment.NewLine}",
@@ -58,7 +58,7 @@ public class LoggingDecoratorTests
         // Assert
         // Must Dispose to flush the logger
         loggerFactory.Dispose();
-        textWriter.Flush();
+        Console.Out.Flush();
         string? consoleOutput = textWriter.ToString();
         Assert.Equal(
             $"info: LoggingDecoratorGenerator.IntegrationTests.ISomeService[0]{Environment.NewLine}      Entering StringReturningAsyncMethod with parameters: s = SomeInputParameter{Environment.NewLine}info: LoggingDecoratorGenerator.IntegrationTests.ISomeService[0]{Environment.NewLine}      Method StringReturningAsyncMethod returned. Result = SomeReturnValue{Environment.NewLine}",
@@ -96,7 +96,7 @@ public class LoggingDecoratorTests
         // Assert
         // Must Dispose to flush the logger
         loggerFactory.Dispose();
-        textWriter.Flush();
+        Console.Out.Flush();
         string? consoleOutput = textWriter.ToString();
 
         string expectedConsoleOutput = """
@@ -161,7 +161,7 @@ public class LoggingDecoratorTests
         // Assert
         // Must Dispose to flush the logger
         loggerFactory.Dispose();
-        textWriter.Flush();
+        Console.Out.Flush();
         string? consoleOutput = textWriter.ToString();
 
         string expectedConsoleOutput = """
@@ -223,7 +223,7 @@ public class LoggingDecoratorTests
         // Assert
         // Must Dispose to flush the logger
         loggerFactory.Dispose();
-        textWriter.Flush();
+        Console.Out.Flush();
         string? consoleOutput = textWriter.ToString();
 
         Assert.Equal(expected: string.Empty, actual: consoleOutput);
