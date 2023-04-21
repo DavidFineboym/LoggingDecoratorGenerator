@@ -3,6 +3,7 @@
 
 Generates logger decorator class for an interface. Uses `Microsoft.Extensions.Logging.ILogger<{Your interface}>` to log and requires it in decorator class constructor.
 Logs method parameters and return value. Supports async methods. Supports log level, event id, and event name override through attribute.
+Can measure method duration for performance reporting.
 Follows high-performance logging guidance by .NET team-> https://learn.microsoft.com/en-us/dotnet/core/extensions/high-performance-logging
 
 ## Getting started
@@ -30,7 +31,7 @@ public interface ISomeService
     int SomeMethod(DateTime someDateTime);
 
     // Override log level and event id. EventName is also supported.
-    [LogMethod(Level = LogLevel.Information, EventId = 100)]
+    [LogMethod(Level = LogLevel.Information, EventId = 100, MeasureDuration = true)]
     Task<double?> SomeAsyncMethod(string? s);
 }
 ```

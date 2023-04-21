@@ -20,7 +20,7 @@ namespace SomeFolder.SomeSubFolder
     [DecorateWithLogger]
     public interface ISomeService
     {
-        [LogMethod(Level = LogLevel.Trace, EventId = 101, EventName = ""foo"")]
+        [LogMethod(Level = LogLevel.Trace, EventId = 101, EventName = ""foo"", MeasureDuration = true)]
         void VoidParameterlessMethod();
 
         int IntReturningMethod(int x, Person person);

@@ -8,14 +8,14 @@
 		<LangVersion>Latest</LangVersion>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-		<Version>1.2.0</Version>
+		<Version>1.3.0</Version>
 		<Authors>dfineboym</Authors>
 		<Company></Company>
 		<EnableNETAnalyzers>True</EnableNETAnalyzers>
 		<AnalysisLevel>preview-all</AnalysisLevel>
 		<Title>Logging Decorator Generator</Title>
 		<RepositoryUrl>https://github.com/DavidFineboym/LoggingDecoratorGenerator</RepositoryUrl>
-		<PackageTags>logging;generator</PackageTags>
+		<PackageTags>logging decorator;source generator</PackageTags>
 		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
 		<Description>Generates logger decorator class for an interface. Uses Microsoft.Extensions.Logging.ILogger&lt;{Your interface}&gt; to log and requires it in decorator class constructor.</Description>
 	</PropertyGroup>
@@ -32,7 +32,7 @@
 
 	<ItemGroup>
 		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-		<None Include="..\README.md" Pack="true" PackagePath="\"/>
+		<None Include="..\README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
 </Project>

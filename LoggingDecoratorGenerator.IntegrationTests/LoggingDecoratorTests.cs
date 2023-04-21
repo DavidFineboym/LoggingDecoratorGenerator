@@ -2,10 +2,11 @@ using FakeItEasy;
 using Microsoft.Extensions.Logging;
 using OtherFolder.OtherSubFolder;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace LoggingDecoratorGenerator.IntegrationTests;
 
-public class LoggingDecoratorTests
+public partial class LoggingDecoratorTests
 {
     [Fact]
     public void SynchronousMethod_DecoratorLogsAndCallsDecoratedInstance()
@@ -230,4 +231,52 @@ public class LoggingDecoratorTests
 
         A.CallTo(() => fakeService.MethodShouldNotBeLoggedBecauseOfLogLevel()).MustHaveHappenedOnceExactly();
     }
+
+    [Fact]
+    public async Task IInformationLevelInterface_MethodWithMeasuredDurationAsync()
+    {
+        // Arrange
+        using TextWriter textWriter = new StringWriter();
+        Console.SetOut(textWriter);
+        ILoggerFactory loggerFactory = LoggerFactory.Create(static builder => builder.AddJsonConsole(options =>
+        {
+            options.JsonWriterOptions = new JsonWriterOptions
+            {
+                Indented = false
+            };
+        }).SetMinimumLevel(LogLevel.Information));
+
+        ILogger<IInformationLevelInterface> logger = loggerFactory.CreateLogger<IInformationLevelInterface>();
+        Assert.True(logger.IsEnabled(LogLevel.Information));
+        Assert.False(logger.IsEnabled(LogLevel.Debug));
+        IInformationLevelInterface fakeService = A.Fake<IInformationLevelInterface>();
+        IInformationLevelInterface decorator = new InformationLevelInterfaceLoggingDecorator(logger, fakeService);
+        DateOnly inputParam = DateOnly.FromDayNumber(1_000);
+        Person expectedReturnValue = new("bar", 42);
+        A.CallTo(() => fakeService.MethodWithMeasuredDurationAsync(inputParam)).Returns(expectedReturnValue);
+
+        // Act
+        Person actualReturn = await decorator.MethodWithMeasuredDurationAsync(inputParam);
+
+        // Assert
+        // Must Dispose to flush the logger
+        loggerFactory.Dispose();
+        Console.Out.Flush();
+        string? consoleOutput = textWriter.ToString();
+        Assert.NotNull(consoleOutput);
+        string[] twoLines = consoleOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        Assert.Equal(expected: 2, actual: twoLines.Length);
+        Assert.Equal(
+            expected: /*lang=json,strict*/ """{"EventId":-1,"LogLevel":"Information","Category":"LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface","Message":"Entering MethodWithMeasuredDurationAsync with parameters: someDate = 09/28/0003","State":{"Message":"Entering MethodWithMeasuredDurationAsync with parameters: someDate = 09/28/0003","someDate":"09/28/0003","{OriginalFormat}":"Entering MethodWithMeasuredDurationAsync with parameters: someDate = {someDate}"}}""",
+            actual: twoLines[0]);
+        Assert.Matches(expectedRegex: DurationRegex(), actualString: twoLines[1]);
+
+        Assert.Equal(expected: expectedReturnValue, actual: actualReturn);
+        A.CallTo(() => fakeService.MethodWithMeasuredDurationAsync(inputParam)).MustHaveHappenedOnceExactly();
+    }
+
+    [GeneratedRegex(
+        @"\{""EventId"":-1,""LogLevel"":""Information"",""Category"":""LoggingDecoratorGenerator\.IntegrationTests\.IInformationLevelInterface"",""Message"":""Method MethodWithMeasuredDurationAsync returned\. Result = Person \{ Name = bar, Age = 42 \}\. DurationInMilliseconds = \d+(\.\d+)?"",""State"":\{""Message"":""Method MethodWithMeasuredDurationAsync returned\. Result = Person \{ Name = bar, Age = 42 \}\. DurationInMilliseconds = \d+(\.\d+)?"",""result"":""Person \{ Name = bar, Age = 42 \}"",""durationInMilliseconds"":\d+(\.\d+)?,""{OriginalFormat}"":""Method MethodWithMeasuredDurationAsync returned\. Result = {result}\. DurationInMilliseconds = {durationInMilliseconds}""\}\}",
+        RegexOptions.ExplicitCapture)]
+    private static partial Regex DurationRegex();
 }

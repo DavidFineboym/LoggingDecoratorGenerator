@@ -19,5 +19,10 @@ namespace Fineboym.Logging.Attributes
         /// This will equal the method name if not specified.
         /// </remarks>
         public string? EventName { get; set; }
+
+        /// <summary>
+        /// Surrounds the method call by <see cref="global::System.Diagnostics.Stopwatch"/> and logs duration in milliseconds. Default is false.
+        /// </summary>
+        public bool MeasureDuration { get; set; }
     }
 }

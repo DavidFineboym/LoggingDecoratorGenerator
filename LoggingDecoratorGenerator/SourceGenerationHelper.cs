@@ -49,6 +49,11 @@ namespace Fineboym.Logging.Attributes
         /// This will equal the method name if not specified.
         /// </remarks>
         public string? EventName { get; set; }
+
+        /// <summary>
+        /// Surrounds the method call by <see cref=""global::System.Diagnostics.Stopwatch""/> and logs duration in milliseconds. Default is false.
+        /// </summary>
+        public bool MeasureDuration { get; set; }
     }
 }";
 
@@ -165,6 +170,11 @@ namespace Fineboym.Logging.Attributes
 
     private static void AppendBeforeMethodSection(IndentedTextWriter writer, string loggerDelegateBeforeVariable, MethodToGenerate methodToGenerate)
     {
+        if (methodToGenerate.MeasureDuration)
+        {
+            writer.WriteLine("global::System.Diagnostics.Stopwatch? stopwatch = null;");
+        }
+
         writer.WriteLine($"if (_logger.IsEnabled({methodToGenerate.LogLevel}))");
         writer.StartBlock();
 
@@ -186,6 +196,11 @@ namespace Fineboym.Logging.Attributes
         }
         writer.WriteLine("null);");
 
+        if (methodToGenerate.MeasureDuration)
+        {
+            writer.WriteLine("stopwatch = global::System.Diagnostics.Stopwatch.StartNew();");
+        }
+
         writer.EndBlock();
     }
 
@@ -197,12 +212,15 @@ namespace Fineboym.Logging.Attributes
         writer.Write($"{loggerDelegateAfterVariable}(_logger, ");
         if (methodToGenerate.HasReturnValue)
         {
-            writer.WriteLine("result, null);");
+            writer.Write("result, ");
         }
-        else
+
+        if (methodToGenerate.MeasureDuration)
         {
-            writer.WriteLine("null);");
+            writer.Write("stopwatch?.Elapsed.TotalMilliseconds, ");
         }
+
+        writer.WriteLine("null);");
 
         writer.EndBlock();
 
@@ -266,16 +284,37 @@ namespace Fineboym.Logging.Attributes
         bool awaitable = methodToGenerate.Awaitable;
 
         string loggerVariable = $"s_after{method.Name}";
+
+        List<string> types = new();
+
+        if (hasReturnValue)
+        {
+            ITypeSymbol returnType = awaitable ? methodToGenerate.UnwrappedReturnType! : method.ReturnType;
+            types.Add(returnType.ToDisplayString(s_symbolFormat));
+        }
+
+        if (methodToGenerate.MeasureDuration)
+        {
+            types.Add("double?");
+        }
+
         AppendLoggerMessageDefineUpToFormatString(
             writer,
-            hasReturnValue ? new[] { awaitable ? methodToGenerate.UnwrappedReturnType! : method.ReturnType } : Array.Empty<ITypeSymbol>(),
+            types,
             loggerVariable,
             methodToGenerate);
+
         writer.Write($"\"Method {method.Name} returned");
         if (hasReturnValue)
         {
             writer.Write(". Result = {result}");
         }
+
+        if (methodToGenerate.MeasureDuration)
+        {
+            writer.Write(". DurationInMilliseconds = {durationInMilliseconds}");
+        }
+
         writer.Write("\", ");
         FinishByLogDefineOptions(writer);
 
@@ -286,13 +325,21 @@ namespace Fineboym.Logging.Attributes
         IndentedTextWriter writer,
         IReadOnlyList<ITypeSymbol> types,
         string loggerVariable,
+        MethodToGenerate methodToGenerate) => AppendLoggerMessageDefineUpToFormatString(writer,
+                                                                                        types.Select(static t => t.ToDisplayString(s_symbolFormat)).ToArray(),
+                                                                                        loggerVariable,
+                                                                                        methodToGenerate);
+
+    private static void AppendLoggerMessageDefineUpToFormatString(
+        IndentedTextWriter writer,
+        IReadOnlyList<string> types,
+        string loggerVariable,
         MethodToGenerate methodToGenerate)
     {
         writer.Write("private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, ");
         for (int i = 0; i < types.Count; i++)
         {
-            ITypeSymbol type = types[i];
-            writer.Write(type.ToDisplayString(s_symbolFormat));
+            writer.Write(types[i]);
             writer.Write(", ");
         }
         writer.Write($"global::System.Exception?> {loggerVariable} = global::Microsoft.Extensions.Logging.LoggerMessage.Define");
@@ -302,8 +349,8 @@ namespace Fineboym.Logging.Attributes
             {
                 writer.Write("<");
             }
-            ITypeSymbol type = types[i];
-            writer.Write(type.ToDisplayString(s_symbolFormat));
+
+            writer.Write(types[i]);
             if (i < types.Count - 1)
             {
                 writer.Write(", ");

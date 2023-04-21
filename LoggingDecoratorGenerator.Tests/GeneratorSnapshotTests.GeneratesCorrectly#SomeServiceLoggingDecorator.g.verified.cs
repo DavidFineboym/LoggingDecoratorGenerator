@@ -3,7 +3,7 @@
 
 namespace SomeFolder.SomeSubFolder
 {
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Fineboym.Logging.Generator", "1.2.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Fineboym.Logging.Generator", "1.3.0.0")]
     public sealed class SomeServiceLoggingDecorator : SomeFolder.SomeSubFolder.ISomeService
     {
         private readonly global::Microsoft.Extensions.Logging.ILogger<SomeFolder.SomeSubFolder.ISomeService> _logger;
@@ -16,18 +16,20 @@ namespace SomeFolder.SomeSubFolder
         }
 
         private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Exception?> s_beforeVoidParameterlessMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define(global::Microsoft.Extensions.Logging.LogLevel.Trace, new global::Microsoft.Extensions.Logging.EventId(101, "foo"), "Entering VoidParameterlessMethod", new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
-        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Exception?> s_afterVoidParameterlessMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define(global::Microsoft.Extensions.Logging.LogLevel.Trace, new global::Microsoft.Extensions.Logging.EventId(101, "foo"), "Method VoidParameterlessMethod returned", new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, double?, global::System.Exception?> s_afterVoidParameterlessMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define<double?>(global::Microsoft.Extensions.Logging.LogLevel.Trace, new global::Microsoft.Extensions.Logging.EventId(101, "foo"), "Method VoidParameterlessMethod returned. DurationInMilliseconds = {durationInMilliseconds}", new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
 
         public void VoidParameterlessMethod()
         {
+            global::System.Diagnostics.Stopwatch? stopwatch = null;
             if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Trace))
             {
                 s_beforeVoidParameterlessMethod(_logger, null);
+                stopwatch = global::System.Diagnostics.Stopwatch.StartNew();
             }
             _decorated.VoidParameterlessMethod();
             if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Trace))
             {
-                s_afterVoidParameterlessMethod(_logger, null);
+                s_afterVoidParameterlessMethod(_logger, stopwatch?.Elapsed.TotalMilliseconds, null);
             }
         }
 

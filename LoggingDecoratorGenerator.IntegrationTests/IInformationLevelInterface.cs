@@ -13,6 +13,9 @@ namespace LoggingDecoratorGenerator.IntegrationTests
         Person MethodWithAttribute(Person person, int someNumber);
 
         void MethodShouldNotBeLoggedBecauseOfLogLevel();
+
+        [LogMethod(MeasureDuration = true)]
+        Task<Person> MethodWithMeasuredDurationAsync(DateOnly someDate);
     }
 }
 

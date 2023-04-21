@@ -18,6 +18,8 @@ internal class MethodToGenerate
 
     public ITypeSymbol? UnwrappedReturnType { get; private set; }
 
+    public bool MeasureDuration { get; private set; }
+
     public MethodToGenerate(IMethodSymbol methodSymbol, string interfaceLogLevel, INamedTypeSymbol methodMarkerAttribute)
     {
         MethodSymbol = methodSymbol;
@@ -51,6 +53,9 @@ internal class MethodToGenerate
                         break;
                     case "EventName" when typedConstant.Value is string eventName:
                         EventName = $"\"{eventName}\"";
+                        break;
+                    case "MeasureDuration" when typedConstant.Value is bool measureDuration:
+                        MeasureDuration = measureDuration;
                         break;
                 }
             }
