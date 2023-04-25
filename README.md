@@ -18,7 +18,7 @@ Latest version of Visual Studio 2022.
 
 ## Usage
 
-```
+```C#
 using Fineboym.Logging.Attributes;
 using Microsoft.Extensions.Logging;
 

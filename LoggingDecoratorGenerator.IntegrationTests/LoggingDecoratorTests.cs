@@ -12,11 +12,19 @@ public partial class LoggingDecoratorTests
     public void SynchronousMethod_DecoratorLogsAndCallsDecoratedInstance()
     {
         // Arrange
-        using TextWriter textWriter = new StringWriter();
+        StringWriter textWriter = new();
         Console.SetOut(textWriter);
-        ILoggerFactory loggerFactory = LoggerFactory.Create(static builder => builder.AddSimpleConsole().SetMinimumLevel(LogLevel.Debug));
+        ILoggerFactory loggerFactory = LoggerFactory.Create(static builder => builder.AddJsonConsole(options =>
+        {
+            options.JsonWriterOptions = new JsonWriterOptions
+            {
+                Indented = true
+            };
+        }).SetMinimumLevel(LogLevel.Debug));
+
         ILogger<ISomeService> logger = loggerFactory.CreateLogger<ISomeService>();
         Assert.True(logger.IsEnabled(LogLevel.Debug));
+        Assert.False(logger.IsEnabled(LogLevel.Trace));
         ISomeService fakeService = A.Fake<ISomeService>();
         ISomeService decorator = new SomeServiceLoggingDecorator(logger, fakeService);
         DateTime dateTimeParameter = new(year: 2022, month: 12, day: 12, hour: 22, minute: 57, second: 45, DateTimeKind.Utc);
@@ -27,26 +35,58 @@ public partial class LoggingDecoratorTests
         DateTime actualReturn = decorator.DateTimeReturningMethod(dateTimeParameter);
 
         // Assert
-        // Must Dispose to flush the logger
-        loggerFactory.Dispose();
-        Console.Out.Flush();
-        string? consoleOutput = textWriter.ToString();
-        Assert.Equal(
-            $"dbug: LoggingDecoratorGenerator.IntegrationTests.ISomeService[-1]{Environment.NewLine}      Entering DateTimeReturningMethod with parameters: someDateTime = 12/12/2022 22:57:45{Environment.NewLine}dbug: LoggingDecoratorGenerator.IntegrationTests.ISomeService[-1]{Environment.NewLine}      Method DateTimeReturningMethod returned. Result = 09/06/2020 00:00:00{Environment.NewLine}",
-            consoleOutput);
         Assert.Equal(expected: expectedReturnValue, actual: actualReturn);
         A.CallTo(() => fakeService.DateTimeReturningMethod(dateTimeParameter)).MustHaveHappenedOnceExactly();
+
+        string expectedConsoleOutput = """
+            {
+              "EventId": -1,
+              "LogLevel": "Debug",
+              "Category": "LoggingDecoratorGenerator.IntegrationTests.ISomeService",
+              "Message": "Entering DateTimeReturningMethod with parameters: someDateTime = 12/12/2022 22:57:45",
+              "State": {
+                "Message": "Entering DateTimeReturningMethod with parameters: someDateTime = 12/12/2022 22:57:45",
+                "someDateTime": "12/12/2022 22:57:45",
+                "{OriginalFormat}": "Entering DateTimeReturningMethod with parameters: someDateTime = {someDateTime}"
+              }
+            }
+            {
+              "EventId": -1,
+              "LogLevel": "Debug",
+              "Category": "LoggingDecoratorGenerator.IntegrationTests.ISomeService",
+              "Message": "Method DateTimeReturningMethod returned. Result = 09/06/2020 00:00:00",
+              "State": {
+                "Message": "Method DateTimeReturningMethod returned. Result = 09/06/2020 00:00:00",
+                "result": "09/06/2020 00:00:00",
+                "{OriginalFormat}": "Method DateTimeReturningMethod returned. Result = {result}"
+              }
+            }
+
+            """.ReplaceLineEndings();
+
+        loggerFactory.Dispose();
+
+        string? consoleOutput = textWriter.ToString();
+        Assert.Equal(expectedConsoleOutput, consoleOutput);
     }
 
     [Fact]
     public async Task AsynchronousMethod_DecoratorLogsAndCallsDecoratedInstance()
     {
         // Arrange
-        using TextWriter textWriter = new StringWriter();
+        StringWriter textWriter = new();
         Console.SetOut(textWriter);
-        ILoggerFactory loggerFactory = LoggerFactory.Create(static builder => builder.AddSimpleConsole());
+        ILoggerFactory loggerFactory = LoggerFactory.Create(static builder => builder.AddJsonConsole(options =>
+        {
+            options.JsonWriterOptions = new JsonWriterOptions
+            {
+                Indented = true
+            };
+        }));
+
         ILogger<ISomeService> logger = loggerFactory.CreateLogger<ISomeService>();
         Assert.True(logger.IsEnabled(LogLevel.Information));
+        Assert.False(logger.IsEnabled(LogLevel.Debug));
         ISomeService fakeService = A.Fake<ISomeService>();
         ISomeService decorator = new SomeServiceLoggingDecorator(logger, fakeService);
         string inputParameter = "SomeInputParameter";
@@ -57,22 +97,46 @@ public partial class LoggingDecoratorTests
         string? actualReturn = await decorator.StringReturningAsyncMethod(inputParameter);
 
         // Assert
-        // Must Dispose to flush the logger
-        loggerFactory.Dispose();
-        Console.Out.Flush();
-        string? consoleOutput = textWriter.ToString();
-        Assert.Equal(
-            $"info: LoggingDecoratorGenerator.IntegrationTests.ISomeService[0]{Environment.NewLine}      Entering StringReturningAsyncMethod with parameters: s = SomeInputParameter{Environment.NewLine}info: LoggingDecoratorGenerator.IntegrationTests.ISomeService[0]{Environment.NewLine}      Method StringReturningAsyncMethod returned. Result = SomeReturnValue{Environment.NewLine}",
-            consoleOutput);
         Assert.Equal(expected: expectedReturnValue, actual: actualReturn);
         A.CallTo(() => fakeService.StringReturningAsyncMethod(inputParameter)).MustHaveHappenedOnceExactly();
+
+        string expectedConsoleOutput = """
+            {
+              "EventId": 0,
+              "LogLevel": "Information",
+              "Category": "LoggingDecoratorGenerator.IntegrationTests.ISomeService",
+              "Message": "Entering StringReturningAsyncMethod with parameters: s = SomeInputParameter",
+              "State": {
+                "Message": "Entering StringReturningAsyncMethod with parameters: s = SomeInputParameter",
+                "s": "SomeInputParameter",
+                "{OriginalFormat}": "Entering StringReturningAsyncMethod with parameters: s = {s}"
+              }
+            }
+            {
+              "EventId": 0,
+              "LogLevel": "Information",
+              "Category": "LoggingDecoratorGenerator.IntegrationTests.ISomeService",
+              "Message": "Method StringReturningAsyncMethod returned. Result = SomeReturnValue",
+              "State": {
+                "Message": "Method StringReturningAsyncMethod returned. Result = SomeReturnValue",
+                "result": "SomeReturnValue",
+                "{OriginalFormat}": "Method StringReturningAsyncMethod returned. Result = {result}"
+              }
+            }
+
+            """.ReplaceLineEndings();
+
+        loggerFactory.Dispose();
+
+        string? consoleOutput = textWriter.ToString();
+        Assert.Equal(expectedConsoleOutput, consoleOutput);
     }
 
     [Fact]
     public async Task IInformationLevelInterface_MethodWithoutAttribute()
     {
         // Arrange
-        using TextWriter textWriter = new StringWriter();
+        StringWriter textWriter = new();
         Console.SetOut(textWriter);
         ILoggerFactory loggerFactory = LoggerFactory.Create(static builder => builder.AddJsonConsole(options =>
         {
@@ -95,10 +159,8 @@ public partial class LoggingDecoratorTests
         float actualReturn = await decorator.MethodWithoutAttribute(x, y);
 
         // Assert
-        // Must Dispose to flush the logger
-        loggerFactory.Dispose();
-        Console.Out.Flush();
-        string? consoleOutput = textWriter.ToString();
+        Assert.Equal(expected: expectedReturnValue, actual: actualReturn);
+        A.CallTo(() => fakeService.MethodWithoutAttribute(x, y)).MustHaveHappenedOnceExactly();
 
         string expectedConsoleOutput = """
             {
@@ -126,17 +188,18 @@ public partial class LoggingDecoratorTests
             }
             
             """.ReplaceLineEndings();
-        Assert.Equal(expected: expectedConsoleOutput, actual: consoleOutput);
 
-        Assert.Equal(expected: expectedReturnValue, actual: actualReturn);
-        A.CallTo(() => fakeService.MethodWithoutAttribute(x, y)).MustHaveHappenedOnceExactly();
+        loggerFactory.Dispose();
+
+        string? consoleOutput = textWriter.ToString();
+        Assert.Equal(expected: expectedConsoleOutput, actual: consoleOutput);
     }
 
     [Fact]
     public void IInformationLevelInterface_MethodWithAttribute()
     {
         // Arrange
-        using TextWriter textWriter = new StringWriter();
+        StringWriter textWriter = new();
         Console.SetOut(textWriter);
         ILoggerFactory loggerFactory = LoggerFactory.Create(static builder => builder.AddJsonConsole(options =>
         {
@@ -160,10 +223,8 @@ public partial class LoggingDecoratorTests
         Person actualReturn = decorator.MethodWithAttribute(firstInput, secondInput);
 
         // Assert
-        // Must Dispose to flush the logger
-        loggerFactory.Dispose();
-        Console.Out.Flush();
-        string? consoleOutput = textWriter.ToString();
+        Assert.Equal(expected: expectedReturnValue, actual: actualReturn);
+        A.CallTo(() => fakeService.MethodWithAttribute(firstInput, secondInput)).MustHaveHappenedOnceExactly();
 
         string expectedConsoleOutput = """
             {
@@ -191,17 +252,18 @@ public partial class LoggingDecoratorTests
             }
             
             """.ReplaceLineEndings();
-        Assert.Equal(expected: expectedConsoleOutput, actual: consoleOutput);
 
-        Assert.Equal(expected: expectedReturnValue, actual: actualReturn);
-        A.CallTo(() => fakeService.MethodWithAttribute(firstInput, secondInput)).MustHaveHappenedOnceExactly();
+        loggerFactory.Dispose();
+
+        string? consoleOutput = textWriter.ToString();
+        Assert.Equal(expected: expectedConsoleOutput, actual: consoleOutput);
     }
 
     [Fact]
     public void IInformationLevelInterface_MethodShouldNotBeLoggedBecauseOfLogLevel()
     {
         // Arrange
-        using TextWriter textWriter = new StringWriter();
+        StringWriter textWriter = new();
         Console.SetOut(textWriter);
         ILoggerFactory loggerFactory = LoggerFactory.Create(static builder => builder.AddJsonConsole(options =>
         {
@@ -222,21 +284,19 @@ public partial class LoggingDecoratorTests
         decorator.MethodShouldNotBeLoggedBecauseOfLogLevel();
 
         // Assert
-        // Must Dispose to flush the logger
-        loggerFactory.Dispose();
-        Console.Out.Flush();
-        string? consoleOutput = textWriter.ToString();
-
-        Assert.Equal(expected: string.Empty, actual: consoleOutput);
-
         A.CallTo(() => fakeService.MethodShouldNotBeLoggedBecauseOfLogLevel()).MustHaveHappenedOnceExactly();
+
+        loggerFactory.Dispose();
+
+        string? consoleOutput = textWriter.ToString();
+        Assert.Equal(expected: string.Empty, actual: consoleOutput);
     }
 
     [Fact]
     public async Task IInformationLevelInterface_MethodWithMeasuredDurationAsync()
     {
         // Arrange
-        using TextWriter textWriter = new StringWriter();
+        StringWriter textWriter = new();
         Console.SetOut(textWriter);
         ILoggerFactory loggerFactory = LoggerFactory.Create(static builder => builder.AddJsonConsole(options =>
         {
@@ -259,9 +319,11 @@ public partial class LoggingDecoratorTests
         Person actualReturn = await decorator.MethodWithMeasuredDurationAsync(inputParam);
 
         // Assert
-        // Must Dispose to flush the logger
+        Assert.Equal(expected: expectedReturnValue, actual: actualReturn);
+        A.CallTo(() => fakeService.MethodWithMeasuredDurationAsync(inputParam)).MustHaveHappenedOnceExactly();
+
         loggerFactory.Dispose();
-        Console.Out.Flush();
+
         string? consoleOutput = textWriter.ToString();
         Assert.NotNull(consoleOutput);
         string[] twoLines = consoleOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
@@ -270,9 +332,6 @@ public partial class LoggingDecoratorTests
             expected: /*lang=json,strict*/ """{"EventId":-1,"LogLevel":"Information","Category":"LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface","Message":"Entering MethodWithMeasuredDurationAsync with parameters: someDate = 09/28/0003","State":{"Message":"Entering MethodWithMeasuredDurationAsync with parameters: someDate = 09/28/0003","someDate":"09/28/0003","{OriginalFormat}":"Entering MethodWithMeasuredDurationAsync with parameters: someDate = {someDate}"}}""",
             actual: twoLines[0]);
         Assert.Matches(expectedRegex: DurationRegex(), actualString: twoLines[1]);
-
-        Assert.Equal(expected: expectedReturnValue, actual: actualReturn);
-        A.CallTo(() => fakeService.MethodWithMeasuredDurationAsync(inputParam)).MustHaveHappenedOnceExactly();
     }
 
     [GeneratedRegex(
