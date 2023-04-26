@@ -3,7 +3,7 @@
 
 namespace SomeFolder.SomeSubFolder
 {
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Fineboym.Logging.Generator", "1.3.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Fineboym.Logging.Generator", "1.3.1.0")]
     public sealed class SomeServiceLoggingDecorator : SomeFolder.SomeSubFolder.ISomeService
     {
         private readonly global::Microsoft.Extensions.Logging.ILogger<SomeFolder.SomeSubFolder.ISomeService> _logger;
@@ -20,16 +20,16 @@ namespace SomeFolder.SomeSubFolder
 
         public void VoidParameterlessMethod()
         {
-            global::System.Diagnostics.Stopwatch? stopwatch = null;
+            global::System.Diagnostics.Stopwatch? __stopwatch = null;
             if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Trace))
             {
                 s_beforeVoidParameterlessMethod(_logger, null);
-                stopwatch = global::System.Diagnostics.Stopwatch.StartNew();
+                __stopwatch = global::System.Diagnostics.Stopwatch.StartNew();
             }
             _decorated.VoidParameterlessMethod();
             if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Trace))
             {
-                s_afterVoidParameterlessMethod(_logger, stopwatch?.Elapsed.TotalMilliseconds, null);
+                s_afterVoidParameterlessMethod(_logger, __stopwatch?.Elapsed.TotalMilliseconds, null);
             }
         }
 
@@ -42,12 +42,12 @@ namespace SomeFolder.SomeSubFolder
             {
                 s_beforeIntReturningMethod(_logger, x, person, null);
             }
-            var result = _decorated.IntReturningMethod(x, person);
+            var __result = _decorated.IntReturningMethod(x, person);
             if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
             {
-                s_afterIntReturningMethod(_logger, result, null);
+                s_afterIntReturningMethod(_logger, __result, null);
             }
-            return result;
+            return __result;
         }
 
         private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, int, int, global::System.Exception?> s_beforeTaskReturningAsyncMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define<int, int>(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(TaskReturningAsyncMethod)), "Entering TaskReturningAsyncMethod with parameters: x = {x}, y = {y}", new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
@@ -75,12 +75,12 @@ namespace SomeFolder.SomeSubFolder
             {
                 s_beforeTaskIntReturningAsyncMethod(_logger, x, y, null);
             }
-            var result = await _decorated.TaskIntReturningAsyncMethod(x, y).ConfigureAwait(false);
+            var __result = await _decorated.TaskIntReturningAsyncMethod(x, y).ConfigureAwait(false);
             if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
             {
-                s_afterTaskIntReturningAsyncMethod(_logger, result, null);
+                s_afterTaskIntReturningAsyncMethod(_logger, __result, null);
             }
-            return result;
+            return __result;
         }
 
         private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, int, int, global::System.Exception?> s_beforeValueTaskReturningAsyncMethod = global::Microsoft.Extensions.Logging.LoggerMessage.Define<int, int>(global::Microsoft.Extensions.Logging.LogLevel.Debug, new global::Microsoft.Extensions.Logging.EventId(-1, nameof(ValueTaskReturningAsyncMethod)), "Entering ValueTaskReturningAsyncMethod with parameters: x = {x}, y = {y}", new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
@@ -108,12 +108,12 @@ namespace SomeFolder.SomeSubFolder
             {
                 s_beforeValueTaskFloatReturningAsyncMethod(_logger, x, y, null);
             }
-            var result = await _decorated.ValueTaskFloatReturningAsyncMethod(x, y).ConfigureAwait(false);
+            var __result = await _decorated.ValueTaskFloatReturningAsyncMethod(x, y).ConfigureAwait(false);
             if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
             {
-                s_afterValueTaskFloatReturningAsyncMethod(_logger, result, null);
+                s_afterValueTaskFloatReturningAsyncMethod(_logger, __result, null);
             }
-            return result;
+            return __result;
         }
     }
 }
