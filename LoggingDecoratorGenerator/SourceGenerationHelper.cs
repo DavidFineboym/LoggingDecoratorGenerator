@@ -138,7 +138,7 @@ namespace Fineboym.Logging.Attributes
 
         if (hasReturnValue)
         {
-            writer.Write("var result = ");
+            writer.Write("var __result = ");
         }
 
         if (awaitable)
@@ -172,7 +172,7 @@ namespace Fineboym.Logging.Attributes
     {
         if (methodToGenerate.MeasureDuration)
         {
-            writer.WriteLine("global::System.Diagnostics.Stopwatch? stopwatch = null;");
+            writer.WriteLine("global::System.Diagnostics.Stopwatch? __stopwatch = null;");
         }
 
         writer.WriteLine($"if (_logger.IsEnabled({methodToGenerate.LogLevel}))");
@@ -198,7 +198,7 @@ namespace Fineboym.Logging.Attributes
 
         if (methodToGenerate.MeasureDuration)
         {
-            writer.WriteLine("stopwatch = global::System.Diagnostics.Stopwatch.StartNew();");
+            writer.WriteLine("__stopwatch = global::System.Diagnostics.Stopwatch.StartNew();");
         }
 
         writer.EndBlock();
@@ -212,12 +212,12 @@ namespace Fineboym.Logging.Attributes
         writer.Write($"{loggerDelegateAfterVariable}(_logger, ");
         if (methodToGenerate.HasReturnValue)
         {
-            writer.Write("result, ");
+            writer.Write("__result, ");
         }
 
         if (methodToGenerate.MeasureDuration)
         {
-            writer.Write("stopwatch?.Elapsed.TotalMilliseconds, ");
+            writer.Write("__stopwatch?.Elapsed.TotalMilliseconds, ");
         }
 
         writer.WriteLine("null);");
@@ -226,7 +226,7 @@ namespace Fineboym.Logging.Attributes
 
         if (methodToGenerate.HasReturnValue)
         {
-            writer.WriteLine("return result;");
+            writer.WriteLine("return __result;");
         }
     }
 
