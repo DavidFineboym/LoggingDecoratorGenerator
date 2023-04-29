@@ -4,6 +4,8 @@ namespace Fineboym.Logging.Generator;
 
 internal class MethodToGenerate
 {
+    private const string LogLevelEnumFullName = "global::Microsoft.Extensions.Logging.LogLevel";
+
     public IMethodSymbol MethodSymbol { get; }
 
     public string LogLevel { get; }
@@ -11,6 +13,8 @@ internal class MethodToGenerate
     public string EventId { get; }
 
     public string EventName { get; }
+
+    public string UniqueName { get; set; }
 
     public bool Awaitable { get; private set; }
 
@@ -20,13 +24,19 @@ internal class MethodToGenerate
 
     public bool MeasureDuration { get; private set; }
 
+    public string? ExceptionTypeToLog { get; private set; }
+
+    public string ExceptionLogLevel { get; private set; }
+
     public MethodToGenerate(IMethodSymbol methodSymbol, string interfaceLogLevel, INamedTypeSymbol methodMarkerAttribute)
     {
         MethodSymbol = methodSymbol;
+        UniqueName = methodSymbol.Name; // assume no overloads at first
         CheckReturnType(methodSymbol.ReturnType);
         LogLevel = interfaceLogLevel;
         EventId = "-1";
         EventName = $"nameof({methodSymbol.Name})";
+        ExceptionLogLevel = $"{LogLevelEnumFullName}.Error"; // default log level
 
         foreach (AttributeData attributeData in methodSymbol.GetAttributes())
         {
@@ -46,7 +56,7 @@ internal class MethodToGenerate
                 switch (arg.Key)
                 {
                     case "Level" when typedConstant.Value is int logLevel:
-                        LogLevel = $"global::Microsoft.Extensions.Logging.LogLevel.{DecoratorGenerator.ConvertLogLevel(logLevel)}";
+                        LogLevel = $"{LogLevelEnumFullName}.{DecoratorGenerator.ConvertLogLevel(logLevel)}";
                         break;
                     case "EventId" when typedConstant.Value is int eventId:
                         EventId = eventId.ToString();
@@ -56,6 +66,12 @@ internal class MethodToGenerate
                         break;
                     case "MeasureDuration" when typedConstant.Value is bool measureDuration:
                         MeasureDuration = measureDuration;
+                        break;
+                    case "ExceptionToLog" when typedConstant.Value is INamedTypeSymbol exceptionToLog:
+                        ExceptionTypeToLog = exceptionToLog.ToDisplayString(SourceGenerationHelper.SymbolFormat);
+                        break;
+                    case "ExceptionLogLevel" when typedConstant.Value is int exceptionLogLevel:
+                        ExceptionLogLevel = $"{LogLevelEnumFullName}.{DecoratorGenerator.ConvertLogLevel(exceptionLogLevel)}";
                         break;
                 }
             }

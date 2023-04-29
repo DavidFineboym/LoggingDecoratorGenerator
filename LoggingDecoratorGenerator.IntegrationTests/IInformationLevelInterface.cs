@@ -14,8 +14,11 @@ namespace LoggingDecoratorGenerator.IntegrationTests
 
         void MethodShouldNotBeLoggedBecauseOfLogLevel();
 
-        [LogMethod(MeasureDuration = true)]
+        [LogMethod(MeasureDuration = true, ExceptionToLog = typeof(Exception), ExceptionLogLevel = LogLevel.Critical)]
         Task<Person> MethodWithMeasuredDurationAsync(DateOnly someDate);
+
+        [LogMethod(ExceptionToLog = typeof(Exception), EventId = 777)]
+        Task MethodThrowsAndLogsExceptionAsync();
     }
 }
 

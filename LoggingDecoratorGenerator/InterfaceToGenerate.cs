@@ -35,6 +35,22 @@ internal class InterfaceToGenerate
                 Methods.Add(new MethodToGenerate(method, logLevel, methodMarkerAttribute));
             }
         }
+
+        // Once we've collected all methods for the given interface, check for overloads and provide unique names
+        var methods = new Dictionary<string, int>(Methods.Count, StringComparer.Ordinal);
+        foreach (MethodToGenerate m in Methods)
+        {
+            if (methods.TryGetValue(m.MethodSymbol.Name, out int currentCount))
+            {
+                m.UniqueName = $"{m.MethodSymbol.Name}{currentCount}";
+                methods[m.MethodSymbol.Name] = currentCount + 1;
+            }
+            else
+            {
+                m.UniqueName = m.MethodSymbol.Name;
+                methods[m.MethodSymbol.Name] = 1; //start from 1
+            }
+        }
     }
 
     // determine the namespace the class/enum/struct is declared in, if any

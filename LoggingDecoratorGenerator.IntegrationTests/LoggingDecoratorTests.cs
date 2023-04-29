@@ -133,6 +133,65 @@ public partial class LoggingDecoratorTests
     }
 
     [Fact]
+    public void ISomeService_TwoMethodsWithSameName_WithIntegerParameter()
+    {
+        // Arrange
+        StringWriter textWriter = new();
+        Console.SetOut(textWriter);
+        ILoggerFactory loggerFactory = LoggerFactory.Create(static builder => builder.AddJsonConsole(options =>
+        {
+            options.JsonWriterOptions = new JsonWriterOptions
+            {
+                Indented = true
+            };
+        }).SetMinimumLevel(LogLevel.Debug));
+
+        ILogger<ISomeService> logger = loggerFactory.CreateLogger<ISomeService>();
+        Assert.True(logger.IsEnabled(LogLevel.Debug));
+        Assert.False(logger.IsEnabled(LogLevel.Trace));
+        ISomeService fakeService = A.Fake<ISomeService>();
+        ISomeService decorator = new SomeServiceLoggingDecorator(logger, fakeService);
+        int inputParameter = 42;
+        A.CallTo(() => fakeService.TwoMethodsWithSameName(inputParameter)).DoesNothing();
+
+        // Act
+        decorator.TwoMethodsWithSameName(inputParameter);
+
+        // Assert
+        A.CallTo(() => fakeService.TwoMethodsWithSameName(inputParameter)).MustHaveHappenedOnceExactly();
+
+        string expectedConsoleOutput = """
+            {
+              "EventId": 333,
+              "LogLevel": "Debug",
+              "Category": "LoggingDecoratorGenerator.IntegrationTests.ISomeService",
+              "Message": "Entering TwoMethodsWithSameName with parameters: i = 42",
+              "State": {
+                "Message": "Entering TwoMethodsWithSameName with parameters: i = 42",
+                "i": 42,
+                "{OriginalFormat}": "Entering TwoMethodsWithSameName with parameters: i = {i}"
+              }
+            }
+            {
+              "EventId": 333,
+              "LogLevel": "Debug",
+              "Category": "LoggingDecoratorGenerator.IntegrationTests.ISomeService",
+              "Message": "Method TwoMethodsWithSameName returned",
+              "State": {
+                "Message": "Method TwoMethodsWithSameName returned",
+                "{OriginalFormat}": "Method TwoMethodsWithSameName returned"
+              }
+            }
+
+            """.ReplaceLineEndings();
+
+        loggerFactory.Dispose();
+
+        string? consoleOutput = textWriter.ToString();
+        Assert.Equal(expectedConsoleOutput, consoleOutput);
+    }
+
+    [Fact]
     public async Task IInformationLevelInterface_MethodWithoutAttribute()
     {
         // Arrange
@@ -338,4 +397,50 @@ public partial class LoggingDecoratorTests
         @"\{""EventId"":-1,""LogLevel"":""Information"",""Category"":""LoggingDecoratorGenerator\.IntegrationTests\.IInformationLevelInterface"",""Message"":""Method MethodWithMeasuredDurationAsync returned\. Result = Person \{ Name = bar, Age = 42 \}\. DurationInMilliseconds = \d+(\.\d+)?"",""State"":\{""Message"":""Method MethodWithMeasuredDurationAsync returned\. Result = Person \{ Name = bar, Age = 42 \}\. DurationInMilliseconds = \d+(\.\d+)?"",""result"":""Person \{ Name = bar, Age = 42 \}"",""durationInMilliseconds"":\d+(\.\d+)?,""{OriginalFormat}"":""Method MethodWithMeasuredDurationAsync returned\. Result = {result}\. DurationInMilliseconds = {durationInMilliseconds}""\}\}",
         RegexOptions.ExplicitCapture)]
     private static partial Regex DurationRegex();
+
+    [Fact]
+    public async Task IInformationLevelInterface_MethodThrowsAndLogsExceptionAsync()
+    {
+        // Arrange
+        StringWriter textWriter = new();
+        Console.SetOut(textWriter);
+        ILoggerFactory loggerFactory = LoggerFactory.Create(static builder => builder.AddJsonConsole(options =>
+        {
+            options.JsonWriterOptions = new JsonWriterOptions
+            {
+                Indented = false
+            };
+        }).SetMinimumLevel(LogLevel.Information));
+
+        ILogger<IInformationLevelInterface> logger = loggerFactory.CreateLogger<IInformationLevelInterface>();
+        Assert.True(logger.IsEnabled(LogLevel.Information));
+        Assert.False(logger.IsEnabled(LogLevel.Debug));
+        IInformationLevelInterface fakeService = A.Fake<IInformationLevelInterface>();
+        IInformationLevelInterface decorator = new InformationLevelInterfaceLoggingDecorator(logger, fakeService);
+        InvalidOperationException expectedException = new("someMessage");
+        A.CallTo(() => fakeService.MethodThrowsAndLogsExceptionAsync()).ThrowsAsync(expectedException);
+
+        // Act and Assert
+        InvalidOperationException actualException = await Assert.ThrowsAsync<InvalidOperationException>(() => decorator.MethodThrowsAndLogsExceptionAsync());
+        Assert.Equal(expectedException, actualException);
+        A.CallTo(() => fakeService.MethodThrowsAndLogsExceptionAsync()).MustHaveHappenedOnceExactly();
+
+        loggerFactory.Dispose();
+
+        string? consoleOutput = textWriter.ToString();
+        Assert.NotNull(consoleOutput);
+        string[] twoLines = consoleOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        Assert.Equal(expected: 2, actual: twoLines.Length);
+        Assert.Equal(
+            expected: /*lang=json,strict*/ """{"EventId":777,"LogLevel":"Information","Category":"LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface","Message":"Entering MethodThrowsAndLogsExceptionAsync","State":{"Message":"Entering MethodThrowsAndLogsExceptionAsync","{OriginalFormat}":"Entering MethodThrowsAndLogsExceptionAsync"}}""",
+            actual: twoLines[0]);
+
+        Assert.StartsWith(
+            """{"EventId":777,"LogLevel":"Error","Category":"LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface","Message":"MethodThrowsAndLogsExceptionAsync failed","Exception":"System.InvalidOperationException: someMessage    at LoggingDecoratorGenerator.IntegrationTests.InformationLevelInterfaceLoggingDecorator.MethodThrowsAndLogsExceptionAsync() in """,
+            twoLines[1]);
+
+        Assert.EndsWith(
+            """InformationLevelInterfaceLoggingDecorator.g.cs:line 166","State":{"Message":"MethodThrowsAndLogsExceptionAsync failed","{OriginalFormat}":"MethodThrowsAndLogsExceptionAsync failed"}}""",
+            twoLines[1]);
+    }
 }

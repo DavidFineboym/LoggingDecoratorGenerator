@@ -11,7 +11,7 @@ internal static class SourceGenerationHelper
                $"\"{typeof(SourceGenerationHelper).Assembly.GetName().Name}\", " +
                $"\"{typeof(SourceGenerationHelper).Assembly.GetName().Version}\")]";
 
-    private static readonly SymbolDisplayFormat s_symbolFormat = SymbolDisplayFormat.FullyQualifiedFormat
+    public static readonly SymbolDisplayFormat SymbolFormat = SymbolDisplayFormat.FullyQualifiedFormat
         .AddMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
 
     public const string DecorateWithLoggerAttribute = @"#nullable enable
@@ -51,16 +51,25 @@ namespace Fineboym.Logging.Attributes
         public string? EventName { get; set; }
 
         /// <summary>
-        /// Surrounds the method call by <see cref=""global::System.Diagnostics.Stopwatch""/> and logs duration in milliseconds. Default is false.
+        /// Surrounds the method call by <see cref=""System.Diagnostics.Stopwatch""/> and logs duration in milliseconds. Default is false.
         /// </summary>
         public bool MeasureDuration { get; set; }
+
+        /// <summary>
+        /// By default, exceptions are not logged and there is no try-catch block around the method call.
+        /// Set this property to some exception type to log exceptions of that type.
+        /// </summary>
+        public System.Type? ExceptionToLog { get; set; }
+
+        /// <summary>
+        /// If <see cref=""ExceptionToLog""/> is not null, then this controls log level for exceptions. Default is <see cref=""Microsoft.Extensions.Logging.LogLevel.Error""/>.
+        /// </summary>
+        public Microsoft.Extensions.Logging.LogLevel ExceptionLogLevel { get; set; } = Microsoft.Extensions.Logging.LogLevel.Error;
     }
 }";
 
     public static (string className, string source) GenerateLoggingDecoratorClass(InterfaceToGenerate interfaceToGenerate)
     {
-        // TODO : Check generic interfaces and also generic methods in interfaces. Emit error diagnostic in that case.
-        // TODO : Check non-public access modifiers
         using StringWriter stringWriter = new();
         using IndentedTextWriter writer = new(stringWriter, "    ");
         writer.WriteLine("#nullable enable");
@@ -89,7 +98,6 @@ namespace Fineboym.Logging.Attributes
             writer.WriteLineNoTabs(null);
             string loggerDelegateBeforeVariable = AppendLoggerMessageDefineForBeforeCall(writer, methodToGenerate);
             string loggerDelegateAfterVariable = AppendLoggerMessageDefineForAfterCall(writer, methodToGenerate);
-            writer.WriteLineNoTabs(null);
             AppendMethod(writer, methodToGenerate, loggerDelegateBeforeVariable, loggerDelegateAfterVariable);
         }
 
@@ -120,11 +128,11 @@ namespace Fineboym.Logging.Attributes
         bool awaitable = methodToGenerate.Awaitable;
         bool hasReturnValue = methodToGenerate.HasReturnValue;
 
-        writer.Write($"public {(awaitable ? "async " : string.Empty)}{method.ReturnType.ToDisplayString(s_symbolFormat)} {method.Name}(");
+        writer.Write($"public {(awaitable ? "async " : string.Empty)}{method.ReturnType.ToDisplayString(SymbolFormat)} {method.Name}(");
         for (int i = 0; i < method.Parameters.Length; i++)
         {
             IParameterSymbol parameter = method.Parameters[i];
-            writer.Write($"{parameter.Type.ToDisplayString(s_symbolFormat)} {parameter.Name}");
+            writer.Write($"{parameter.Type.ToDisplayString(SymbolFormat)} {parameter.Name}");
             if (i < method.Parameters.Length - 1)
             {
                 writer.Write(", ");
@@ -136,9 +144,24 @@ namespace Fineboym.Logging.Attributes
 
         AppendBeforeMethodSection(writer, loggerDelegateBeforeVariable, methodToGenerate);
 
+        if (methodToGenerate.ExceptionTypeToLog != null)
+        {
+            if (hasReturnValue)
+            {
+                writer.WriteLine($"{(awaitable ? methodToGenerate.UnwrappedReturnType! : method.ReturnType).ToDisplayString(SymbolFormat)} __result;");
+            }
+
+            writer.WriteLine("try");
+            writer.StartBlock();
+        }
+        else if (hasReturnValue)
+        {
+            writer.Write("var ");
+        }
+
         if (hasReturnValue)
         {
-            writer.Write("var __result = ");
+            writer.Write("__result = ");
         }
 
         if (awaitable)
@@ -161,6 +184,23 @@ namespace Fineboym.Logging.Attributes
             writer.Write(".ConfigureAwait(false)");
         }
         writer.WriteLine(';');
+
+        if (methodToGenerate.ExceptionTypeToLog != null)
+        {
+            writer.EndBlock();
+            writer.WriteLine($"catch ({methodToGenerate.ExceptionTypeToLog} __e)");
+            writer.StartBlock();
+            writer.WriteLine("global::Microsoft.Extensions.Logging.LoggerExtensions.Log(");
+            writer.Indent++;
+            writer.WriteLine("_logger,");
+            writer.WriteLine($"{methodToGenerate.ExceptionLogLevel},");
+            writer.WriteLine($"new global::Microsoft.Extensions.Logging.EventId({methodToGenerate.EventId}, {methodToGenerate.EventName}),");
+            writer.WriteLine("__e,");
+            writer.WriteLine($"\"{method.Name} failed\");");
+            writer.Indent--;
+            writer.WriteLine("throw;");
+            writer.EndBlock();
+        }
 
         AppendAfterMethodSection(writer, loggerDelegateAfterVariable, methodToGenerate);
 
@@ -251,7 +291,7 @@ namespace Fineboym.Logging.Attributes
     private static string AppendLoggerMessageDefineForBeforeCall(IndentedTextWriter writer, MethodToGenerate methodToGenerate)
     {
         IMethodSymbol methodSymbol = methodToGenerate.MethodSymbol;
-        string loggerVariable = $"s_before{methodSymbol.Name}";
+        string loggerVariable = $"s_before{methodToGenerate.UniqueName}";
         AppendLoggerMessageDefineUpToFormatString(
             writer,
             methodSymbol.Parameters.Select(static p => p.Type).ToArray(),
@@ -271,7 +311,7 @@ namespace Fineboym.Logging.Attributes
                 writer.Write(", ");
             }
         }
-        writer.Write("\", ");
+        writer.WriteLine("\",");
         FinishByLogDefineOptions(writer);
 
         return loggerVariable;
@@ -283,14 +323,14 @@ namespace Fineboym.Logging.Attributes
         bool hasReturnValue = methodToGenerate.HasReturnValue;
         bool awaitable = methodToGenerate.Awaitable;
 
-        string loggerVariable = $"s_after{method.Name}";
+        string loggerVariable = $"s_after{methodToGenerate.UniqueName}";
 
         List<string> types = new();
 
         if (hasReturnValue)
         {
             ITypeSymbol returnType = awaitable ? methodToGenerate.UnwrappedReturnType! : method.ReturnType;
-            types.Add(returnType.ToDisplayString(s_symbolFormat));
+            types.Add(returnType.ToDisplayString(SymbolFormat));
         }
 
         if (methodToGenerate.MeasureDuration)
@@ -315,7 +355,7 @@ namespace Fineboym.Logging.Attributes
             writer.Write(". DurationInMilliseconds = {durationInMilliseconds}");
         }
 
-        writer.Write("\", ");
+        writer.WriteLine("\",");
         FinishByLogDefineOptions(writer);
 
         return loggerVariable;
@@ -326,7 +366,7 @@ namespace Fineboym.Logging.Attributes
         IReadOnlyList<ITypeSymbol> types,
         string loggerVariable,
         MethodToGenerate methodToGenerate) => AppendLoggerMessageDefineUpToFormatString(writer,
-                                                                                        types.Select(static t => t.ToDisplayString(s_symbolFormat)).ToArray(),
+                                                                                        types.Select(static t => t.ToDisplayString(SymbolFormat)).ToArray(),
                                                                                         loggerVariable,
                                                                                         methodToGenerate);
 
@@ -342,7 +382,10 @@ namespace Fineboym.Logging.Attributes
             writer.Write(types[i]);
             writer.Write(", ");
         }
-        writer.Write($"global::System.Exception?> {loggerVariable} = global::Microsoft.Extensions.Logging.LoggerMessage.Define");
+        writer.WriteLine($"global::System.Exception?> {loggerVariable}");
+        writer.Indent++;
+        writer.Write("= global::Microsoft.Extensions.Logging.LoggerMessage.Define");
+
         for (int i = 0; i < types.Count; i++)
         {
             if (i == 0)
@@ -360,9 +403,17 @@ namespace Fineboym.Logging.Attributes
                 writer.Write(">");
             }
         }
-        writer.Write($"({methodToGenerate.LogLevel}, new global::Microsoft.Extensions.Logging.EventId({methodToGenerate.EventId}, {methodToGenerate.EventName}), ");
+
+        writer.WriteLine("(");
+        writer.Indent++;
+        writer.WriteLine($"{methodToGenerate.LogLevel},");
+        writer.WriteLine($"new global::Microsoft.Extensions.Logging.EventId({methodToGenerate.EventId}, {methodToGenerate.EventName}),");
     }
 
-    private static void FinishByLogDefineOptions(IndentedTextWriter writer) =>
+    private static void FinishByLogDefineOptions(IndentedTextWriter writer)
+    {
         writer.WriteLine("new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });");
+        writer.Indent -= 2;
+        writer.WriteLineNoTabs(null);
+    }
 }

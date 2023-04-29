@@ -21,8 +21,19 @@ namespace Fineboym.Logging.Attributes
         public string? EventName { get; set; }
 
         /// <summary>
-        /// Surrounds the method call by <see cref="global::System.Diagnostics.Stopwatch"/> and logs duration in milliseconds. Default is false.
+        /// Surrounds the method call by <see cref="System.Diagnostics.Stopwatch"/> and logs duration in milliseconds. Default is false.
         /// </summary>
         public bool MeasureDuration { get; set; }
+
+        /// <summary>
+        /// By default, exceptions are not logged and there is no try-catch block around the method call.
+        /// Set this property to some exception type to log exceptions of that type.
+        /// </summary>
+        public System.Type? ExceptionToLog { get; set; }
+
+        /// <summary>
+        /// If <see cref="ExceptionToLog"/> is not null, then this controls log level for exceptions. Default is <see cref="Microsoft.Extensions.Logging.LogLevel.Error"/>.
+        /// </summary>
+        public Microsoft.Extensions.Logging.LogLevel ExceptionLogLevel { get; set; } = Microsoft.Extensions.Logging.LogLevel.Error;
     }
 }
