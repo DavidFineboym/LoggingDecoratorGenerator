@@ -14,9 +14,9 @@ public class DecoratorGenerator : IIncrementalGenerator
         // Add the marker attributes to the compilation
         context.RegisterPostInitializationOutput(ctx =>
         {
-            ctx.AddSource("DecorateWithLoggerAttribute.g.cs", SourceText.From(Attributes.DecorateWithLogger, Encoding.UTF8));
-            ctx.AddSource("LogMethodAttribute.g.cs", SourceText.From(Attributes.LogMethod, Encoding.UTF8));
-            ctx.AddSource("NotLoggedAttribute.g.cs", SourceText.From(Attributes.NotLogged, Encoding.UTF8));
+            ctx.AddSource($"{Attributes.DecorateWithLoggerName}.g.cs", SourceText.From(Attributes.DecorateWithLogger, Encoding.UTF8));
+            ctx.AddSource($"{Attributes.LogMethodName}.g.cs", SourceText.From(Attributes.LogMethod, Encoding.UTF8));
+            ctx.AddSource($"{Attributes.NotLoggedName}.g.cs", SourceText.From(Attributes.NotLogged, Encoding.UTF8));
         });
 
         // Do a simple filter for interfaces

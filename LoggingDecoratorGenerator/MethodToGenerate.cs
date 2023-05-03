@@ -55,22 +55,22 @@ internal class MethodToGenerate
 
                 switch (arg.Key)
                 {
-                    case "Level" when typedConstant.Value is int logLevel:
+                    case Attributes.LogMethodLevelName when typedConstant.Value is int logLevel:
                         LogLevel = $"{LogLevelEnumFullName}.{DecoratorGenerator.ConvertLogLevel(logLevel)}";
                         break;
-                    case "EventId" when typedConstant.Value is int eventId:
+                    case Attributes.LogMethodEventIdName when typedConstant.Value is int eventId:
                         EventId = eventId.ToString();
                         break;
-                    case "EventName" when typedConstant.Value is string eventName:
+                    case Attributes.LogMethodEventNameName when typedConstant.Value is string eventName:
                         EventName = $"\"{eventName}\"";
                         break;
-                    case "MeasureDuration" when typedConstant.Value is bool measureDuration:
+                    case Attributes.LogMethodMeasureDurationName when typedConstant.Value is bool measureDuration:
                         MeasureDuration = measureDuration;
                         break;
-                    case "ExceptionToLog" when typedConstant.Value is INamedTypeSymbol exceptionToLog:
+                    case Attributes.LogMethodExceptionToLogName when typedConstant.Value is INamedTypeSymbol exceptionToLog:
                         ExceptionTypeToLog = exceptionToLog.ToFullyQualifiedDisplayString();
                         break;
-                    case "ExceptionLogLevel" when typedConstant.Value is int exceptionLogLevel:
+                    case Attributes.LogMethodExceptionLogLevelName when typedConstant.Value is int exceptionLogLevel:
                         ExceptionLogLevel = $"{LogLevelEnumFullName}.{DecoratorGenerator.ConvertLogLevel(exceptionLogLevel)}";
                         break;
                 }
