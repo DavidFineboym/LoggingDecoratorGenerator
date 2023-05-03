@@ -68,7 +68,7 @@ internal class MethodToGenerate
                         MeasureDuration = measureDuration;
                         break;
                     case "ExceptionToLog" when typedConstant.Value is INamedTypeSymbol exceptionToLog:
-                        ExceptionTypeToLog = exceptionToLog.ToDisplayString(SourceGenerationHelper.SymbolFormat);
+                        ExceptionTypeToLog = exceptionToLog.ToFullyQualifiedDisplayString();
                         break;
                     case "ExceptionLogLevel" when typedConstant.Value is int exceptionLogLevel:
                         ExceptionLogLevel = $"{LogLevelEnumFullName}.{DecoratorGenerator.ConvertLogLevel(exceptionLogLevel)}";

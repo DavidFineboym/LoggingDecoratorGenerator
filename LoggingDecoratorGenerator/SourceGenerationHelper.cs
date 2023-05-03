@@ -11,63 +11,6 @@ internal static class SourceGenerationHelper
                $"\"{typeof(SourceGenerationHelper).Assembly.GetName().Name}\", " +
                $"\"{typeof(SourceGenerationHelper).Assembly.GetName().Version}\")]";
 
-    public static readonly SymbolDisplayFormat SymbolFormat = SymbolDisplayFormat.FullyQualifiedFormat
-        .AddMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
-
-    public const string DecorateWithLoggerAttribute = @"#nullable enable
-namespace Fineboym.Logging.Attributes
-{
-    [System.AttributeUsage(System.AttributeTargets.Interface, AllowMultiple = false, Inherited = false)]
-    internal sealed class DecorateWithLoggerAttribute : System.Attribute
-    {
-        public Microsoft.Extensions.Logging.LogLevel Level { get; }
-
-        public DecorateWithLoggerAttribute(Microsoft.Extensions.Logging.LogLevel level = Microsoft.Extensions.Logging.LogLevel.Debug)
-        {
-            Level = level;
-        }
-    }
-}";
-
-    public const string LogMethodAttribute = @"#nullable enable
-namespace Fineboym.Logging.Attributes
-{
-    [System.AttributeUsage(System.AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
-    internal sealed class LogMethodAttribute : System.Attribute
-    {
-        public Microsoft.Extensions.Logging.LogLevel Level { get; set; } = Microsoft.Extensions.Logging.LogLevel.None;
-
-        /// <summary>
-        /// Gets the logging event id for the logging method.
-        /// </summary>
-        public int EventId { get; set; } = -1;
-
-        /// <summary>
-        /// Gets or sets the logging event name for the logging method.
-        /// </summary>
-        /// <remarks>
-        /// This will equal the method name if not specified.
-        /// </remarks>
-        public string? EventName { get; set; }
-
-        /// <summary>
-        /// Surrounds the method call by <see cref=""System.Diagnostics.Stopwatch""/> and logs duration in milliseconds. Default is false.
-        /// </summary>
-        public bool MeasureDuration { get; set; }
-
-        /// <summary>
-        /// By default, exceptions are not logged and there is no try-catch block around the method call.
-        /// Set this property to some exception type to log exceptions of that type.
-        /// </summary>
-        public System.Type? ExceptionToLog { get; set; }
-
-        /// <summary>
-        /// If <see cref=""ExceptionToLog""/> is not null, then this controls log level for exceptions. Default is <see cref=""Microsoft.Extensions.Logging.LogLevel.Error""/>.
-        /// </summary>
-        public Microsoft.Extensions.Logging.LogLevel ExceptionLogLevel { get; set; } = Microsoft.Extensions.Logging.LogLevel.Error;
-    }
-}";
-
     public static (string className, string source) GenerateLoggingDecoratorClass(InterfaceToGenerate interfaceToGenerate)
     {
         using StringWriter stringWriter = new();
@@ -128,11 +71,11 @@ namespace Fineboym.Logging.Attributes
         bool awaitable = methodToGenerate.Awaitable;
         bool hasReturnValue = methodToGenerate.HasReturnValue;
 
-        writer.Write($"public {(awaitable ? "async " : string.Empty)}{method.ReturnType.ToDisplayString(SymbolFormat)} {method.Name}(");
+        writer.Write($"public {(awaitable ? "async " : string.Empty)}{method.ReturnType.ToFullyQualifiedDisplayString()} {method.Name}(");
         for (int i = 0; i < method.Parameters.Length; i++)
         {
             IParameterSymbol parameter = method.Parameters[i];
-            writer.Write($"{parameter.Type.ToDisplayString(SymbolFormat)} {parameter.Name}");
+            writer.Write($"{parameter.Type.ToFullyQualifiedDisplayString()} {parameter.Name}");
             if (i < method.Parameters.Length - 1)
             {
                 writer.Write(", ");
@@ -148,7 +91,7 @@ namespace Fineboym.Logging.Attributes
         {
             if (hasReturnValue)
             {
-                writer.WriteLine($"{(awaitable ? methodToGenerate.UnwrappedReturnType! : method.ReturnType).ToDisplayString(SymbolFormat)} __result;");
+                writer.WriteLine($"{(awaitable ? methodToGenerate.UnwrappedReturnType! : method.ReturnType).ToFullyQualifiedDisplayString()} __result;");
             }
 
             writer.WriteLine("try");
@@ -330,7 +273,7 @@ namespace Fineboym.Logging.Attributes
         if (hasReturnValue)
         {
             ITypeSymbol returnType = awaitable ? methodToGenerate.UnwrappedReturnType! : method.ReturnType;
-            types.Add(returnType.ToDisplayString(SymbolFormat));
+            types.Add(returnType.ToFullyQualifiedDisplayString());
         }
 
         if (methodToGenerate.MeasureDuration)
@@ -366,7 +309,7 @@ namespace Fineboym.Logging.Attributes
         IReadOnlyList<ITypeSymbol> types,
         string loggerVariable,
         MethodToGenerate methodToGenerate) => AppendLoggerMessageDefineUpToFormatString(writer,
-                                                                                        types.Select(static t => t.ToDisplayString(SymbolFormat)).ToArray(),
+                                                                                        types.Select(static t => t.ToFullyQualifiedDisplayString()).ToArray(),
                                                                                         loggerVariable,
                                                                                         methodToGenerate);
 
