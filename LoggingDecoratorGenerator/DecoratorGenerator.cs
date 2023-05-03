@@ -9,9 +9,6 @@ namespace Fineboym.Logging.Generator;
 [Generator]
 public class DecoratorGenerator : IIncrementalGenerator
 {
-    private const string s_decorateAttributeFullName = "Fineboym.Logging.Attributes.DecorateWithLoggerAttribute";
-    private const string s_logMethodAttributeFullName = "Fineboym.Logging.Attributes.LogMethodAttribute";
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Add the marker attributes to the compilation
@@ -59,7 +56,7 @@ public class DecoratorGenerator : IIncrementalGenerator
                 INamedTypeSymbol attributeContainingTypeSymbol = attributeSymbol.ContainingType;
                 string fullName = attributeContainingTypeSymbol.ToDisplayString();
 
-                if (fullName == s_decorateAttributeFullName)
+                if (fullName == Attributes.DecorateWithLoggerFullName)
                 {
                     return interfaceDeclarationSyntax;
                 }
@@ -96,8 +93,8 @@ public class DecoratorGenerator : IIncrementalGenerator
         // Create a list to hold our output
         var interfacesToGenerate = new List<InterfaceToGenerate>();
         // Get the semantic representation of our marker attribute
-        INamedTypeSymbol? interfaceMarkerAttribute = compilation.GetTypeByMetadataName(s_decorateAttributeFullName);
-        INamedTypeSymbol? methodMarkerAttribute = compilation.GetTypeByMetadataName(s_logMethodAttributeFullName);
+        INamedTypeSymbol? interfaceMarkerAttribute = compilation.GetTypeByMetadataName(Attributes.DecorateWithLoggerFullName);
+        INamedTypeSymbol? methodMarkerAttribute = compilation.GetTypeByMetadataName(Attributes.LogMethodFullName);
 
         if (interfaceMarkerAttribute == null || methodMarkerAttribute == null)
         {
