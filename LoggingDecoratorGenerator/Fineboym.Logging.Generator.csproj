@@ -13,16 +13,17 @@
 		<Company></Company>
 		<EnableNETAnalyzers>True</EnableNETAnalyzers>
 		<AnalysisLevel>preview-all</AnalysisLevel>
-		<Title>Logging Decorator Generator</Title>
+		<Title>Logging Decorator Source Generator</Title>
 		<RepositoryUrl>https://github.com/DavidFineboym/LoggingDecoratorGenerator</RepositoryUrl>
 		<PackageTags>logging decorator;source generator</PackageTags>
 		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
-		<Description>Generates logger decorator class for an interface. Uses Microsoft.Extensions.Logging.ILogger&lt;{Your interface}&gt; to log and requires it in decorator class constructor.</Description>
+		<Description>Source generates logger decorator class for an interface. Uses Microsoft.Extensions.Logging.ILogger to log and requires it in decorator class constructor.</Description>
 	</PropertyGroup>
 
 	<PropertyGroup>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageIcon>icon.png</PackageIcon>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -32,6 +33,10 @@
 
 	<ItemGroup>
 		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+		<None Include="..\icon.png">
+		  <Pack>True</Pack>
+		  <PackagePath>\</PackagePath>
+		</None>
 		<None Include="..\README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
