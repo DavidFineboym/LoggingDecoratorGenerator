@@ -1,8 +1,9 @@
 ![image](https://github.com/DavidFineboym/LoggingDecoratorGenerator/actions/workflows/dotnet.yml/badge.svg?event=push)
-# Logging Decorator Generator
+# Logging Decorator Source Generator
 
-Generates logger decorator class for an interface. Uses `Microsoft.Extensions.Logging.ILogger<{Your interface}>` to log and requires it in decorator class constructor.
-Logs method parameters and return value. Supports async methods. Supports log level, event id, and event name override through attribute.
+Generates logger decorator class for an interface. Uses `Microsoft.Extensions.Logging.ILogger` to log and requires it in decorator class constructor.
+Logs method parameters and return value(can omit from log using `[NotLoggedAttribute]`).
+Supports async methods. Supports log level, event id, and event name override through attribute.
 Can catch and log specific exceptions.
 Can measure method duration for performance reporting.
 Follows high-performance logging guidance by .NET team-> https://learn.microsoft.com/en-us/dotnet/core/extensions/high-performance-logging
@@ -40,6 +41,10 @@ public interface ISomeService
     // Default log level for exceptions is Error and it can be changed through ExceptionLogLevel property.
     [LogMethod(ExceptionToLog = typeof(InvalidOperationException))]
     Task<string> AnotherAsyncMethod(int x);
+
+    // You can omit secrets or PII from logs using [NotLogged] attribute.
+    [return: NotLogged]
+    string GetMySecretString(string username, [NotLogged] string password);
 }
 ```
 This will create a generated class named `SomeServiceLoggingDecorator` in the same namespace as the interface.
@@ -48,6 +53,7 @@ This will create a generated class named `SomeServiceLoggingDecorator` in the sa
 
 If you use .NET dependency injection, then you can decorate your service interface using, for example, Scrutor-> https://github.com/khellang/Scrutor
 Go here for explanation-> https://andrewlock.net/adding-decorated-classes-to-the-asp.net-core-di-container-using-scrutor/
+If you're not familiar with Source Generators, read here https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview
 
 ## Limitations
 
