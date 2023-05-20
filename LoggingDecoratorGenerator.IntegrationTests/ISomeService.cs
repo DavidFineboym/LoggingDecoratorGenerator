@@ -18,5 +18,5 @@ public interface ISomeService
     void TwoMethodsWithSameName(int i);
 
     [return: NotLogged]
-    string GetMySecretString(string username, [NotLogged] string password);
+    string GetMySecretString(string username, [NotLogged] string password, int x);
 }

@@ -182,7 +182,7 @@ internal static class SourceGenerationHelper
         writer.StartBlock();
 
         writer.Write($"{loggerDelegateAfterVariable}(_logger, ");
-        if (methodToGenerate.HasReturnValue)
+        if (methodToGenerate.HasReturnValue && methodToGenerate.ReturnValueLogged)
         {
             writer.Write("__result, ");
         }
@@ -269,7 +269,7 @@ internal static class SourceGenerationHelper
 
         List<string> types = new();
 
-        if (hasReturnValue)
+        if (hasReturnValue && methodToGenerate.ReturnValueLogged)
         {
             ITypeSymbol returnType = awaitable ? methodToGenerate.UnwrappedReturnType! : method.ReturnType;
             types.Add(returnType.ToFullyQualifiedDisplayString());
@@ -289,7 +289,14 @@ internal static class SourceGenerationHelper
         writer.Write($"\"Method {method.Name} returned");
         if (hasReturnValue)
         {
-            writer.Write(". Result = {result}");
+            if (methodToGenerate.ReturnValueLogged)
+            {
+                writer.Write(". Result = {result}");
+            }
+            else
+            {
+                writer.Write(". Result = [REDACTED]");
+            }
         }
 
         if (methodToGenerate.MeasureDuration)

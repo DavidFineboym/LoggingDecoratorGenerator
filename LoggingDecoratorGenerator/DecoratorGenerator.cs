@@ -111,7 +111,7 @@ public class DecoratorGenerator : IIncrementalGenerator
 
             // Get the semantic representation of the interface syntax
             SemanticModel semanticModel = compilation.GetSemanticModel(interfaceDeclarationSyntax.SyntaxTree);
-            if (semanticModel.GetDeclaredSymbol(interfaceDeclarationSyntax) is not INamedTypeSymbol interfaceSymbol)
+            if (semanticModel.GetDeclaredSymbol(interfaceDeclarationSyntax, ct) is not INamedTypeSymbol interfaceSymbol)
             {
                 // something went wrong, bail out
                 continue;

@@ -22,6 +22,8 @@ internal class MethodToGenerate
 
     public bool HasReturnValue { get; private set; }
 
+    public bool ReturnValueLogged { get; }
+
     public ITypeSymbol? UnwrappedReturnType { get; private set; }
 
     public bool MeasureDuration { get; private set; }
@@ -87,6 +89,9 @@ internal class MethodToGenerate
             parameters.Add(new(parameterSymbol, notLoggedAttribute));
         }
         Parameters = parameters;
+
+        ReturnValueLogged = !methodSymbol.GetReturnTypeAttributes()
+            .Any(attributeData => notLoggedAttribute.Equals(attributeData.AttributeClass, SymbolEqualityComparer.Default));
     }
 
     private void CheckReturnType(ITypeSymbol methodReturnType)
