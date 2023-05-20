@@ -8,6 +8,8 @@ internal class MethodToGenerate
 
     public IMethodSymbol MethodSymbol { get; }
 
+    public IReadOnlyList<Parameter> Parameters { get; }
+
     public string LogLevel { get; }
 
     public string EventId { get; }
@@ -28,7 +30,7 @@ internal class MethodToGenerate
 
     public string ExceptionLogLevel { get; private set; }
 
-    public MethodToGenerate(IMethodSymbol methodSymbol, string interfaceLogLevel, INamedTypeSymbol methodMarkerAttribute)
+    public MethodToGenerate(IMethodSymbol methodSymbol, string interfaceLogLevel, INamedTypeSymbol methodMarkerAttribute, INamedTypeSymbol notLoggedAttribute)
     {
         MethodSymbol = methodSymbol;
         UniqueName = methodSymbol.Name; // assume no overloads at first
@@ -78,6 +80,13 @@ internal class MethodToGenerate
 
             break;
         }
+
+        var parameters = new List<Parameter>(capacity: methodSymbol.Parameters.Length);
+        foreach (IParameterSymbol parameterSymbol in methodSymbol.Parameters)
+        {
+            parameters.Add(new(parameterSymbol, notLoggedAttribute));
+        }
+        Parameters = parameters;
     }
 
     private void CheckReturnType(ITypeSymbol methodReturnType)

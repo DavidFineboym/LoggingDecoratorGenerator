@@ -151,35 +151,24 @@ internal static class SourceGenerationHelper
         writer.WriteLine("}");
     }
 
-    private static void AppendBeforeMethodSection(IndentedTextWriter writer, string loggerDelegateBeforeVariable, MethodToGenerate methodToGenerate)
+    private static void AppendBeforeMethodSection(IndentedTextWriter writer, string loggerDelegateBeforeVariable, MethodToGenerate method)
     {
-        if (methodToGenerate.MeasureDuration)
+        if (method.MeasureDuration)
         {
             writer.WriteLine("global::System.Diagnostics.Stopwatch? __stopwatch = null;");
         }
 
-        writer.WriteLine($"if (_logger.IsEnabled({methodToGenerate.LogLevel}))");
+        writer.WriteLine($"if (_logger.IsEnabled({method.LogLevel}))");
         writer.StartBlock();
 
-        IMethodSymbol method = methodToGenerate.MethodSymbol;
-
         writer.Write($"{loggerDelegateBeforeVariable}(_logger, ");
-        for (int i = 0; i < method.Parameters.Length; i++)
+        foreach (Parameter loggedParameter in method.Parameters.Where(static p => p.IsLogged))
         {
-            IParameterSymbol parameter = method.Parameters[i];
-            writer.Write($"{parameter.Name}");
-            if (i < method.Parameters.Length - 1)
-            {
-                writer.Write(", ");
-            }
-            else if (i == method.Parameters.Length - 1)
-            {
-                writer.Write(", ");
-            }
+            writer.Write($"{loggedParameter.Symbol.Name}, ");
         }
         writer.WriteLine("null);");
 
-        if (methodToGenerate.MeasureDuration)
+        if (method.MeasureDuration)
         {
             writer.WriteLine("__stopwatch = global::System.Diagnostics.Stopwatch.StartNew();");
         }
@@ -231,25 +220,35 @@ internal static class SourceGenerationHelper
     /// <param name="writer"></param>
     /// <param name="method"></param>
     /// <returns>Variable name of logger delegate.</returns>
-    private static string AppendLoggerMessageDefineForBeforeCall(IndentedTextWriter writer, MethodToGenerate methodToGenerate)
+    private static string AppendLoggerMessageDefineForBeforeCall(IndentedTextWriter writer, MethodToGenerate method)
     {
-        IMethodSymbol methodSymbol = methodToGenerate.MethodSymbol;
-        string loggerVariable = $"s_before{methodToGenerate.UniqueName}";
+        IMethodSymbol methodSymbol = method.MethodSymbol;
+        string loggerVariable = $"s_before{method.UniqueName}";
         AppendLoggerMessageDefineUpToFormatString(
             writer,
-            methodSymbol.Parameters.Select(static p => p.Type).ToArray(),
+            method.Parameters.Where(static p => p.IsLogged).Select(static p => p.Symbol.Type.ToFullyQualifiedDisplayString()).ToArray(),
             loggerVariable,
-            methodToGenerate);
+            method);
         writer.Write($"\"Entering {methodSymbol.Name}");
-        for (int i = 0; i < methodSymbol.Parameters.Length; i++)
+        for (int i = 0; i < method.Parameters.Count; i++)
         {
             if (i == 0)
             {
                 writer.Write(" with parameters: ");
             }
-            IParameterSymbol parameter = methodSymbol.Parameters[i];
-            writer.Write($"{parameter.Name} = {{{parameter.Name}}}");
-            if (i < methodSymbol.Parameters.Length - 1)
+
+            Parameter parameter = method.Parameters[i];
+            IParameterSymbol parameterSymbol = parameter.Symbol;
+            if (parameter.IsLogged)
+            {
+                writer.Write($"{parameterSymbol.Name} = {{{parameterSymbol.Name}}}");
+            }
+            else
+            {
+                writer.Write($"{parameterSymbol.Name} = [REDACTED]");
+            }
+
+            if (i < method.Parameters.Count - 1)
             {
                 writer.Write(", ");
             }
@@ -303,15 +302,6 @@ internal static class SourceGenerationHelper
 
         return loggerVariable;
     }
-
-    private static void AppendLoggerMessageDefineUpToFormatString(
-        IndentedTextWriter writer,
-        IReadOnlyList<ITypeSymbol> types,
-        string loggerVariable,
-        MethodToGenerate methodToGenerate) => AppendLoggerMessageDefineUpToFormatString(writer,
-                                                                                        types.Select(static t => t.ToFullyQualifiedDisplayString()).ToArray(),
-                                                                                        loggerVariable,
-                                                                                        methodToGenerate);
 
     private static void AppendLoggerMessageDefineUpToFormatString(
         IndentedTextWriter writer,

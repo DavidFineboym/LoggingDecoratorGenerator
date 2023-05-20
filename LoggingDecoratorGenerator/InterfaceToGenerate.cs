@@ -16,7 +16,12 @@ internal class InterfaceToGenerate
 
     public string LogLevel { get; }
 
-    public InterfaceToGenerate(INamedTypeSymbol interfaceSymbol, InterfaceDeclarationSyntax interfaceDeclarationSyntax, string logLevel, INamedTypeSymbol methodMarkerAttribute)
+    public InterfaceToGenerate(
+        INamedTypeSymbol interfaceSymbol,
+        InterfaceDeclarationSyntax interfaceDeclarationSyntax,
+        string logLevel,
+        INamedTypeSymbol methodMarkerAttribute,
+        INamedTypeSymbol notLoggedAttribute)
     {
         Interface = interfaceSymbol;
         Methods = new List<MethodToGenerate>();
@@ -32,7 +37,7 @@ internal class InterfaceToGenerate
             // TODO : Emit error diagnostic for interfaces with unsupported members
             if (member is IMethodSymbol method && !method.IsStatic && method.MethodKind == MethodKind.Ordinary)
             {
-                Methods.Add(new MethodToGenerate(method, logLevel, methodMarkerAttribute));
+                Methods.Add(new MethodToGenerate(method, logLevel, methodMarkerAttribute, notLoggedAttribute));
             }
         }
 

@@ -16,4 +16,7 @@ public interface ISomeService
 
     [LogMethod(EventId = 333, EventName = "WithIntegerParam")]
     void TwoMethodsWithSameName(int i);
+
+    [return: NotLogged]
+    string GetMySecretString(string username, [NotLogged] string password);
 }
