@@ -71,6 +71,70 @@ public partial class LoggingDecoratorTests
     }
 
     [Fact]
+    public void ParameterAndReturnValuesNotLogged()
+    {
+        // Arrange
+        StringWriter textWriter = new();
+        Console.SetOut(textWriter);
+        ILoggerFactory loggerFactory = LoggerFactory.Create(static builder => builder.AddJsonConsole(options =>
+        {
+            options.JsonWriterOptions = new JsonWriterOptions
+            {
+                Indented = true
+            };
+        }).SetMinimumLevel(LogLevel.Debug));
+
+        ILogger<ISomeService> logger = loggerFactory.CreateLogger<ISomeService>();
+        Assert.True(logger.IsEnabled(LogLevel.Debug));
+        Assert.False(logger.IsEnabled(LogLevel.Trace));
+        ISomeService fakeService = A.Fake<ISomeService>();
+        ISomeService decorator = new SomeServiceLoggingDecorator(logger, fakeService);
+        string username = "foo";
+        string password = "bar";
+        string expectedReturnValue = "returnValue";
+        int x = 42;
+        A.CallTo(() => fakeService.GetMySecretString(username, password, x)).Returns(expectedReturnValue);
+
+        // Act
+        string actualReturn = decorator.GetMySecretString(username, password, x);
+
+        // Assert
+        Assert.Equal(expected: expectedReturnValue, actual: actualReturn);
+        A.CallTo(() => fakeService.GetMySecretString(username, password, x)).MustHaveHappenedOnceExactly();
+
+        string expectedConsoleOutput = """
+            {
+              "EventId": -1,
+              "LogLevel": "Debug",
+              "Category": "LoggingDecoratorGenerator.IntegrationTests.ISomeService",
+              "Message": "Entering GetMySecretString with parameters: username = foo, password = [REDACTED], x = 42",
+              "State": {
+                "Message": "Entering GetMySecretString with parameters: username = foo, password = [REDACTED], x = 42",
+                "username": "foo",
+                "x": 42,
+                "{OriginalFormat}": "Entering GetMySecretString with parameters: username = {username}, password = [REDACTED], x = {x}"
+              }
+            }
+            {
+              "EventId": -1,
+              "LogLevel": "Debug",
+              "Category": "LoggingDecoratorGenerator.IntegrationTests.ISomeService",
+              "Message": "Method GetMySecretString returned. Result = [REDACTED]",
+              "State": {
+                "Message": "Method GetMySecretString returned. Result = [REDACTED]",
+                "{OriginalFormat}": "Method GetMySecretString returned. Result = [REDACTED]"
+              }
+            }
+
+            """.ReplaceLineEndings();
+
+        loggerFactory.Dispose();
+
+        string? consoleOutput = textWriter.ToString();
+        Assert.Equal(expectedConsoleOutput, consoleOutput);
+    }
+
+    [Fact]
     public async Task AsynchronousMethod_DecoratorLogsAndCallsDecoratedInstance()
     {
         // Arrange

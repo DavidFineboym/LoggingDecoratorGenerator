@@ -95,8 +95,9 @@ public class DecoratorGenerator : IIncrementalGenerator
         // Get the semantic representation of our marker attribute
         INamedTypeSymbol? interfaceMarkerAttribute = compilation.GetTypeByMetadataName(Attributes.DecorateWithLoggerFullName);
         INamedTypeSymbol? methodMarkerAttribute = compilation.GetTypeByMetadataName(Attributes.LogMethodFullName);
+        INamedTypeSymbol? notLoggedAttribute = compilation.GetTypeByMetadataName(Attributes.NotLoggedFullName);
 
-        if (interfaceMarkerAttribute == null || methodMarkerAttribute == null)
+        if (interfaceMarkerAttribute == null || methodMarkerAttribute == null || notLoggedAttribute == null)
         {
             // If this is null, the compilation couldn't find the marker attribute type
             // which suggests there's something very wrong! Bail out..
@@ -110,7 +111,7 @@ public class DecoratorGenerator : IIncrementalGenerator
 
             // Get the semantic representation of the interface syntax
             SemanticModel semanticModel = compilation.GetSemanticModel(interfaceDeclarationSyntax.SyntaxTree);
-            if (semanticModel.GetDeclaredSymbol(interfaceDeclarationSyntax) is not INamedTypeSymbol interfaceSymbol)
+            if (semanticModel.GetDeclaredSymbol(interfaceDeclarationSyntax, ct) is not INamedTypeSymbol interfaceSymbol)
             {
                 // something went wrong, bail out
                 continue;
@@ -130,7 +131,7 @@ public class DecoratorGenerator : IIncrementalGenerator
             }
 
             // Create an InterfaceToGenerate for use in the generation phase
-            interfacesToGenerate.Add(new InterfaceToGenerate(interfaceSymbol, interfaceDeclarationSyntax, interfaceLogLevel, methodMarkerAttribute));
+            interfacesToGenerate.Add(new InterfaceToGenerate(interfaceSymbol, interfaceDeclarationSyntax, interfaceLogLevel, methodMarkerAttribute, notLoggedAttribute));
         }
 
         return interfacesToGenerate;
