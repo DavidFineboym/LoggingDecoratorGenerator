@@ -124,38 +124,23 @@ public partial class InformationLevelInterfaceTests
         LogValuesAssert.Contains(expectedAfterWriteState, afterWriteState);
     }
 
-    //[Fact]
-    //public void MethodShouldNotBeLoggedBecauseOfLogLevel()
-    //{
-    //    // Arrange
-    //    StringWriter textWriter = new();
-    //    Console.SetOut(textWriter);
-    //    ILoggerFactory loggerFactory = LoggerFactory.Create(static builder => builder.AddJsonConsole(options =>
-    //    {
-    //        options.JsonWriterOptions = new JsonWriterOptions
-    //        {
-    //            Indented = true
-    //        };
-    //    }).SetMinimumLevel(LogLevel.Warning));
+    [Fact]
+    public void MethodShouldNotBeLoggedBecauseOfLogLevel()
+    {
+        // Arrange
+        ILogger<IInformationLevelInterface> fakeLogger = A.Fake<ILogger<IInformationLevelInterface>>();
+        var decorator = new InformationLevelInterfaceLoggingDecorator(fakeLogger, _fakeService);
+        A.CallTo(() => fakeLogger.IsEnabled(LogLevel.Information)).Returns(false);
+        A.CallTo(() => _fakeService.MethodShouldNotBeLoggedBecauseOfLogLevel()).DoesNothing();
 
-    //    ILogger<IInformationLevelInterface> logger = loggerFactory.CreateLogger<IInformationLevelInterface>();
-    //    Assert.True(logger.IsEnabled(LogLevel.Warning));
-    //    Assert.False(logger.IsEnabled(LogLevel.Information));
-    //    IInformationLevelInterface fakeService = A.Fake<IInformationLevelInterface>();
-    //    IInformationLevelInterface decorator = new InformationLevelInterfaceLoggingDecorator(logger, fakeService);
-    //    A.CallTo(() => fakeService.MethodShouldNotBeLoggedBecauseOfLogLevel()).DoesNothing();
+        // Act
+        decorator.MethodShouldNotBeLoggedBecauseOfLogLevel();
 
-    //    // Act
-    //    decorator.MethodShouldNotBeLoggedBecauseOfLogLevel();
-
-    //    // Assert
-    //    A.CallTo(() => fakeService.MethodShouldNotBeLoggedBecauseOfLogLevel()).MustHaveHappenedOnceExactly();
-
-    //    loggerFactory.Dispose();
-
-    //    string? consoleOutput = textWriter.ToString();
-    //    Assert.Equal(expected: string.Empty, actual: consoleOutput);
-    //}
+        // Assert
+        A.CallTo(() => _fakeService.MethodShouldNotBeLoggedBecauseOfLogLevel()).MustHaveHappenedOnceExactly();
+        A.CallTo(() => fakeLogger.IsEnabled(LogLevel.Information)).MustHaveHappenedTwiceExactly();
+        A.CallTo(fakeLogger).Where(call => call.Method.Name == nameof(ILogger.Log)).MustNotHaveHappened();
+    }
 
     [Fact]
     public async Task MethodWithMeasuredDurationAsync()
@@ -205,7 +190,8 @@ public partial class InformationLevelInterfaceTests
             new KeyValuePair<string, object>("{OriginalFormat}", "Method MethodWithMeasuredDurationAsync returned. Result = {result}. DurationInMilliseconds = {durationInMilliseconds}"),
         };
         LogValuesAssert.Contains(expectedAfterWriteState, afterWriteState);
-        // TODO: Assert that duration is greater than 0 and present in afterWriteState
+        double? duration = afterWriteState.SingleOrDefault(kvp => kvp.Key == "durationInMilliseconds").Value as double?;
+        Assert.True(duration > 0, $"Duration should be greater than 0, but was {duration}");
     }
 
     [GeneratedRegex(
