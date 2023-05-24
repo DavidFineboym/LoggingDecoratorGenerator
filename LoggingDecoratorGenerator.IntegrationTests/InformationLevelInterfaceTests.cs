@@ -1,11 +1,10 @@
 using FakeItEasy;
 using Microsoft.Extensions.Logging;
 using OtherFolder.OtherSubFolder;
-using System.Text.RegularExpressions;
 
 namespace LoggingDecoratorGenerator.IntegrationTests;
 
-public partial class InformationLevelInterfaceTests
+public class InformationLevelInterfaceTests
 {
     private readonly TestSink _testSink;
     private readonly IInformationLevelInterface _fakeService;
@@ -180,7 +179,6 @@ public partial class InformationLevelInterfaceTests
         Assert.Equal("MethodWithMeasuredDurationAsync", lastWrite.EventId.Name);
         Assert.Equal(LogLevel.Information, lastWrite.LogLevel);
         Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface", lastWrite.LoggerName);
-        Assert.Matches(DurationRegex(), lastWrite.Message);
         Assert.Null(lastWrite.Exception);
         Assert.Null(lastWrite.Scope);
         var afterWriteState = (IReadOnlyList<KeyValuePair<string, object>>)lastWrite.State;
@@ -192,12 +190,8 @@ public partial class InformationLevelInterfaceTests
         LogValuesAssert.Contains(expectedAfterWriteState, afterWriteState);
         double? duration = afterWriteState.SingleOrDefault(kvp => kvp.Key == "durationInMilliseconds").Value as double?;
         Assert.True(duration > 0, $"Duration should be greater than 0, but was {duration}");
+        Assert.Equal($"Method MethodWithMeasuredDurationAsync returned. Result = Person {{ Name = bar, Age = 42 }}. DurationInMilliseconds = {duration}", lastWrite.Message);
     }
-
-    [GeneratedRegex(
-        @"\AMethod MethodWithMeasuredDurationAsync returned\. Result = Person \{ Name = bar, Age = 42 \}\. DurationInMilliseconds = \d+(\.\d+)?\z",
-        RegexOptions.ExplicitCapture)]
-    private static partial Regex DurationRegex();
 
     [Fact]
     public async Task MethodThrowsAndLogsExceptionAsync()
