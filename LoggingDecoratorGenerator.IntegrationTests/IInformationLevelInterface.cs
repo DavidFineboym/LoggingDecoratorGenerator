@@ -17,7 +17,7 @@ namespace LoggingDecoratorGenerator.IntegrationTests
         [LogMethod(MeasureDuration = true, ExceptionToLog = typeof(Exception), ExceptionLogLevel = LogLevel.Critical)]
         Task<Person> MethodWithMeasuredDurationAsync(DateOnly someDate);
 
-        [LogMethod(ExceptionToLog = typeof(Exception), EventId = 777)]
+        [LogMethod(ExceptionToLog = typeof(Exception), EventId = 777, MeasureDuration = true)]
         Task MethodThrowsAndLogsExceptionAsync();
     }
 }

@@ -18,8 +18,7 @@ internal static class SourceGenerationHelper
         writer.WriteLine("#nullable enable");
         writer.WriteLine();
         writer.WriteLine($"namespace {interfaceToGenerate.Namespace}");
-        writer.WriteLine("{");
-        writer.Indent++;
+        writer.StartBlock();
 
         string interfaceName = interfaceToGenerate.Interface.Name;
         string className = $"{(interfaceName[0] == 'I' ? interfaceName.Substring(1) : interfaceName)}LoggingDecorator";
@@ -28,8 +27,7 @@ internal static class SourceGenerationHelper
 
         writer.WriteLine(s_generatedCodeAttribute);
         writer.WriteLine($"{SyntaxFacts.GetText(interfaceToGenerate.Interface.DeclaredAccessibility)} sealed class {className} : {interfaceFullName}");
-        writer.WriteLine("{");
-        writer.Indent++;
+        writer.StartBlock();
         writer.WriteLine($"private readonly {loggerType} _logger;");
         writer.WriteLine($"private readonly {interfaceFullName} _decorated;");
         writer.WriteLineNoTabs(null);
@@ -44,10 +42,8 @@ internal static class SourceGenerationHelper
             AppendMethod(writer, methodToGenerate, loggerDelegateBeforeVariable, loggerDelegateAfterVariable);
         }
 
-        writer.Indent--;
-        writer.WriteLine("}");
-        writer.Indent--;
-        writer.WriteLine("}");
+        writer.EndBlock();
+        writer.EndBlock();
 
         writer.Flush();
 
@@ -57,12 +53,10 @@ internal static class SourceGenerationHelper
     private static void AppendConstructor(IndentedTextWriter writer, string className, string interfaceFullName, string loggerType)
     {
         writer.WriteLine($"public {className}({loggerType} logger, {interfaceFullName} decorated)");
-        writer.WriteLine("{");
-        writer.Indent++;
+        writer.StartBlock();
         writer.WriteLine("_logger = logger;");
         writer.WriteLine("_decorated = decorated;");
-        writer.Indent--;
-        writer.WriteLine("}");
+        writer.EndBlock();
     }
 
     private static void AppendMethod(IndentedTextWriter writer, MethodToGenerate methodToGenerate, string loggerDelegateBeforeVariable, string loggerDelegateAfterVariable)
@@ -82,8 +76,7 @@ internal static class SourceGenerationHelper
             }
         }
         writer.WriteLine(")");
-        writer.WriteLine("{");
-        writer.Indent++;
+        writer.StartBlock();
 
         AppendBeforeMethodSection(writer, loggerDelegateBeforeVariable, methodToGenerate);
 
@@ -147,8 +140,7 @@ internal static class SourceGenerationHelper
 
         AppendAfterMethodSection(writer, loggerDelegateAfterVariable, methodToGenerate);
 
-        writer.Indent--;
-        writer.WriteLine("}");
+        writer.EndBlock();
     }
 
     private static void AppendBeforeMethodSection(IndentedTextWriter writer, string loggerDelegateBeforeVariable, MethodToGenerate method)
