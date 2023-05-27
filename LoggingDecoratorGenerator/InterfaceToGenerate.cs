@@ -1,16 +1,16 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.CSharp;
 using System.Collections.Immutable;
 
 namespace Fineboym.Logging.Generator;
 
 internal class InterfaceToGenerate
 {
-    public INamedTypeSymbol Interface { get; }
+    public string Name { get; }
+
+    public string DeclaredAccessibility { get; }
 
     public List<MethodToGenerate> Methods { get; }
-
-    public InterfaceDeclarationSyntax InterfaceDeclarationSyntax { get; }
 
     public string Namespace { get; }
 
@@ -18,27 +18,23 @@ internal class InterfaceToGenerate
 
     public InterfaceToGenerate(
         INamedTypeSymbol interfaceSymbol,
-        InterfaceDeclarationSyntax interfaceDeclarationSyntax,
-        string logLevel,
+        string interfaceNamespace,
+        INamedTypeSymbol markerAttribute,
         INamedTypeSymbol methodMarkerAttribute,
         INamedTypeSymbol notLoggedAttribute)
     {
-        Interface = interfaceSymbol;
+        LogLevel = ResolveInterfaceLogLevel(markerAttribute, interfaceSymbol) ?? throw new LogLevelResolutionException();
+        Name = interfaceSymbol.Name;
+        Namespace = interfaceNamespace;
+        DeclaredAccessibility = SyntaxFacts.GetText(interfaceSymbol.DeclaredAccessibility);
         Methods = new List<MethodToGenerate>();
-        InterfaceDeclarationSyntax = interfaceDeclarationSyntax;
-        Namespace = GetNamespace(interfaceDeclarationSyntax);
-        LogLevel = logLevel;
 
-        // Get all the members in the interface
-        ImmutableArray<ISymbol> interfaceMembers = interfaceSymbol.GetMembers();
+        AddMethods(interfaceSymbol.GetMembers(), LogLevel, methodMarkerAttribute, notLoggedAttribute);
 
-        foreach (ISymbol member in interfaceMembers)
+        foreach (INamedTypeSymbol baseInterface in interfaceSymbol.AllInterfaces)
         {
-            // TODO : Emit error diagnostic for interfaces with unsupported members
-            if (member is IMethodSymbol method && !method.IsStatic && method.MethodKind == MethodKind.Ordinary)
-            {
-                Methods.Add(new MethodToGenerate(method, logLevel, methodMarkerAttribute, notLoggedAttribute));
-            }
+            string? baseInterfaceLogLevel = ResolveInterfaceLogLevel(markerAttribute, baseInterface);
+            AddMethods(baseInterface.GetMembers(), baseInterfaceLogLevel, methodMarkerAttribute, notLoggedAttribute);
         }
 
         // Once we've collected all methods for the given interface, check for overloads and provide unique names
@@ -58,48 +54,47 @@ internal class InterfaceToGenerate
         }
     }
 
-    // determine the namespace the class/enum/struct is declared in, if any
-    private static string GetNamespace(BaseTypeDeclarationSyntax syntax)
+    private void AddMethods(ImmutableArray<ISymbol> interfaceMembers, string? logLevel, INamedTypeSymbol methodMarkerAttribute, INamedTypeSymbol notLoggedAttribute)
     {
-        // If we don't have a namespace at all we'll return an empty string
-        // This accounts for the "default namespace" case
-        string nameSpace = string.Empty;
-
-        // Get the containing syntax node for the type declaration
-        // (could be a nested type, for example)
-        SyntaxNode? potentialNamespaceParent = syntax.Parent;
-
-        // Keep moving "out" of nested classes etc until we get to a namespace
-        // or until we run out of parents
-        while (potentialNamespaceParent != null &&
-                potentialNamespaceParent is not NamespaceDeclarationSyntax
-                && potentialNamespaceParent is not FileScopedNamespaceDeclarationSyntax)
+        foreach (ISymbol member in interfaceMembers)
         {
-            potentialNamespaceParent = potentialNamespaceParent.Parent;
-        }
-
-        // Build up the final namespace by looping until we no longer have a namespace declaration
-        if (potentialNamespaceParent is BaseNamespaceDeclarationSyntax namespaceParent)
-        {
-            // We have a namespace. Use that as the type
-            nameSpace = namespaceParent.Name.ToString();
-
-            // Keep moving "out" of the namespace declarations until we 
-            // run out of nested namespace declarations
-            while (true)
+            // TODO : Emit error diagnostic for interfaces with unsupported members
+            if (member is IMethodSymbol method && !method.IsStatic && method.MethodKind == MethodKind.Ordinary)
             {
-                if (namespaceParent.Parent is not NamespaceDeclarationSyntax parent)
-                {
-                    break;
-                }
-
-                // Add the outer namespace as a prefix to the final namespace
-                nameSpace = $"{namespaceParent.Name}.{nameSpace}";
-                namespaceParent = parent;
+                Methods.Add(new MethodToGenerate(method, logLevel, methodMarkerAttribute, notLoggedAttribute));
             }
         }
+    }
 
-        // return the final namespace
-        return nameSpace;
+    private static string? ResolveInterfaceLogLevel(INamedTypeSymbol markerAttribute, INamedTypeSymbol interfaceSymbol)
+    {
+        foreach (AttributeData attributeData in interfaceSymbol.GetAttributes())
+        {
+            if (!markerAttribute.Equals(attributeData.AttributeClass, SymbolEqualityComparer.Default))
+            {
+                continue;
+            }
+
+            ImmutableArray<TypedConstant> args = attributeData.ConstructorArguments;
+
+            // make sure we don't have any errors
+            foreach (TypedConstant arg in args)
+            {
+                if (arg.Kind == TypedConstantKind.Error)
+                {
+                    // have an error, so don't try and do any generation
+                    throw new LogLevelResolutionException();
+                }
+            }
+
+            if (args[0].Value is not int value)
+            {
+                throw new LogLevelResolutionException();
+            }
+
+            return $"global::Microsoft.Extensions.Logging.LogLevel.{LogLevelConverter.FromInt(value)}";
+        }
+
+        return null;
     }
 }

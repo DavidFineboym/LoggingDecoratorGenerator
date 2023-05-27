@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 namespace LoggingDecoratorGenerator.IntegrationTests;
 
 [DecorateWithLogger]
-public interface ISomeService
+public interface ISomeService : IDisposable
 {
     DateTime DateTimeReturningMethod(DateTime someDateTime);
 

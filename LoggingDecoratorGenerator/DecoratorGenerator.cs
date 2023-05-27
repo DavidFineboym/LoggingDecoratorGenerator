@@ -124,60 +124,63 @@ public class DecoratorGenerator : IIncrementalGenerator
                 continue;
             }
 
-            string? interfaceLogLevel = ResolveInterfaceLogLevel(interfaceMarkerAttribute, interfaceSymbol);
-            if (interfaceLogLevel == null)
+            try
+            {
+                InterfaceToGenerate @interface = new(interfaceSymbol, GetNamespace(interfaceDeclarationSyntax), interfaceMarkerAttribute, methodMarkerAttribute, notLoggedAttribute);
+                // Create an InterfaceToGenerate for use in the generation phase
+                interfacesToGenerate.Add(@interface);
+            }
+            catch (LogLevelResolutionException)
             {
                 continue;
             }
-
-            // Create an InterfaceToGenerate for use in the generation phase
-            interfacesToGenerate.Add(new InterfaceToGenerate(interfaceSymbol, interfaceDeclarationSyntax, interfaceLogLevel, methodMarkerAttribute, notLoggedAttribute));
         }
 
         return interfacesToGenerate;
     }
 
-    private static string? ResolveInterfaceLogLevel(INamedTypeSymbol markerAttribute, INamedTypeSymbol interfaceSymbol)
+    // determine the namespace the class/enum/struct is declared in, if any
+    private static string GetNamespace(BaseTypeDeclarationSyntax syntax)
     {
-        foreach (AttributeData attributeData in interfaceSymbol.GetAttributes())
+        // If we don't have a namespace at all we'll return an empty string
+        // This accounts for the "default namespace" case
+        string nameSpace = string.Empty;
+
+        // Get the containing syntax node for the type declaration
+        // (could be a nested type, for example)
+        SyntaxNode? potentialNamespaceParent = syntax.Parent;
+
+        // Keep moving "out" of nested classes etc until we get to a namespace
+        // or until we run out of parents
+        while (potentialNamespaceParent != null &&
+                potentialNamespaceParent is not NamespaceDeclarationSyntax
+                && potentialNamespaceParent is not FileScopedNamespaceDeclarationSyntax)
         {
-            if (!markerAttribute.Equals(attributeData.AttributeClass, SymbolEqualityComparer.Default))
-            {
-                continue;
-            }
-
-            ImmutableArray<TypedConstant> args = attributeData.ConstructorArguments;
-
-            // make sure we don't have any errors
-            foreach (TypedConstant arg in args)
-            {
-                if (arg.Kind == TypedConstantKind.Error)
-                {
-                    // have an error, so don't try and do any generation
-                    return null;
-                }
-            }
-
-            if (args[0].Value is not int value)
-            {
-                return null;
-            }
-
-            return $"global::Microsoft.Extensions.Logging.LogLevel.{ConvertLogLevel(value)}";
+            potentialNamespaceParent = potentialNamespaceParent.Parent;
         }
 
-        return null;
-    }
+        // Build up the final namespace by looping until we no longer have a namespace declaration
+        if (potentialNamespaceParent is BaseNamespaceDeclarationSyntax namespaceParent)
+        {
+            // We have a namespace. Use that as the type
+            nameSpace = namespaceParent.Name.ToString();
 
-    public static string ConvertLogLevel(int value) => value switch
-    {
-        0 => "Trace",
-        1 => "Debug",
-        2 => "Information",
-        3 => "Warning",
-        4 => "Error",
-        5 => "Critical",
-        6 => "None",
-        _ => value.ToString()
-    };
+            // Keep moving "out" of the namespace declarations until we 
+            // run out of nested namespace declarations
+            while (true)
+            {
+                if (namespaceParent.Parent is not NamespaceDeclarationSyntax parent)
+                {
+                    break;
+                }
+
+                // Add the outer namespace as a prefix to the final namespace
+                nameSpace = $"{namespaceParent.Name}.{nameSpace}";
+                namespaceParent = parent;
+            }
+        }
+
+        // return the final namespace
+        return nameSpace;
+    }
 }

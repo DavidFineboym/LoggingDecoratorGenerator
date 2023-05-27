@@ -1,5 +1,4 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using System.CodeDom.Compiler;
 
 namespace Fineboym.Logging.Generator;
@@ -20,26 +19,33 @@ internal static class SourceGenerationHelper
         writer.WriteLine($"namespace {interfaceToGenerate.Namespace}");
         writer.StartBlock();
 
-        string interfaceName = interfaceToGenerate.Interface.Name;
+        string interfaceName = interfaceToGenerate.Name;
         string className = $"{(interfaceName[0] == 'I' ? interfaceName.Substring(1) : interfaceName)}LoggingDecorator";
-        string interfaceFullName = $"{interfaceToGenerate.Interface}";
-        string loggerType = $"global::Microsoft.Extensions.Logging.ILogger<{interfaceFullName}>";
+        string loggerType = $"global::Microsoft.Extensions.Logging.ILogger<{interfaceName}>";
 
         writer.WriteLine(s_generatedCodeAttribute);
-        writer.WriteLine($"{SyntaxFacts.GetText(interfaceToGenerate.Interface.DeclaredAccessibility)} sealed class {className} : {interfaceFullName}");
+        writer.WriteLine($"{interfaceToGenerate.DeclaredAccessibility} sealed class {className} : {interfaceName}");
         writer.StartBlock();
         writer.WriteLine($"private readonly {loggerType} _logger;");
-        writer.WriteLine($"private readonly {interfaceFullName} _decorated;");
+        writer.WriteLine($"private readonly {interfaceName} _decorated;");
         writer.WriteLineNoTabs(null);
 
-        AppendConstructor(writer, className, interfaceFullName, loggerType);
+        AppendConstructor(writer, className, interfaceName, loggerType);
 
         foreach (MethodToGenerate methodToGenerate in interfaceToGenerate.Methods)
         {
             writer.WriteLineNoTabs(null);
-            string loggerDelegateBeforeVariable = AppendLoggerMessageDefineForBeforeCall(writer, methodToGenerate);
-            string loggerDelegateAfterVariable = AppendLoggerMessageDefineForAfterCall(writer, methodToGenerate);
-            AppendMethod(writer, methodToGenerate, loggerDelegateBeforeVariable, loggerDelegateAfterVariable);
+
+            if (methodToGenerate.LogLevel == null)
+            {
+                AppendPassThroughMethod(writer, methodToGenerate);
+            }
+            else
+            {
+                string loggerDelegateBeforeVariable = AppendLoggerMessageDefineForBeforeCall(writer, methodToGenerate);
+                string loggerDelegateAfterVariable = AppendLoggerMessageDefineForAfterCall(writer, methodToGenerate);
+                AppendMethod(writer, methodToGenerate, loggerDelegateBeforeVariable, loggerDelegateAfterVariable);
+            }
         }
 
         writer.EndBlock();
@@ -50,13 +56,24 @@ internal static class SourceGenerationHelper
         return (className, stringWriter.ToString());
     }
 
-    private static void AppendConstructor(IndentedTextWriter writer, string className, string interfaceFullName, string loggerType)
+    private static void AppendConstructor(IndentedTextWriter writer, string className, string interfaceName, string loggerType)
     {
-        writer.WriteLine($"public {className}({loggerType} logger, {interfaceFullName} decorated)");
+        writer.WriteLine($"public {className}({loggerType} logger, {interfaceName} decorated)");
         writer.StartBlock();
         writer.WriteLine("_logger = logger;");
         writer.WriteLine("_decorated = decorated;");
         writer.EndBlock();
+    }
+
+    private static void AppendPassThroughMethod(IndentedTextWriter writer, MethodToGenerate methodToGenerate)
+    {
+        var method = methodToGenerate.MethodSymbol;
+        AppendMethodSignature(writer, methodToGenerate);
+        writer.Indent++;
+        writer.Write("=> ");
+        AppendCallToDecoratedInstance(writer, method);
+        writer.WriteLine(';');
+        writer.Indent--;
     }
 
     private static void AppendMethod(IndentedTextWriter writer, MethodToGenerate methodToGenerate, string loggerDelegateBeforeVariable, string loggerDelegateAfterVariable)
@@ -64,18 +81,7 @@ internal static class SourceGenerationHelper
         IMethodSymbol method = methodToGenerate.MethodSymbol;
         bool awaitable = methodToGenerate.Awaitable;
         bool hasReturnValue = methodToGenerate.HasReturnValue;
-
-        writer.Write($"public {(awaitable ? "async " : string.Empty)}{method.ReturnType.ToFullyQualifiedDisplayString()} {method.Name}(");
-        for (int i = 0; i < method.Parameters.Length; i++)
-        {
-            IParameterSymbol parameter = method.Parameters[i];
-            writer.Write($"{parameter.Type.ToFullyQualifiedDisplayString()} {parameter.Name}");
-            if (i < method.Parameters.Length - 1)
-            {
-                writer.Write(", ");
-            }
-        }
-        writer.WriteLine(")");
+        AppendMethodSignature(writer, methodToGenerate);
         writer.StartBlock();
 
         AppendBeforeMethodSection(writer, loggerDelegateBeforeVariable, methodToGenerate);
@@ -104,17 +110,9 @@ internal static class SourceGenerationHelper
         {
             writer.Write("await ");
         }
-        writer.Write($"_decorated.{method.Name}(");
-        for (int i = 0; i < method.Parameters.Length; i++)
-        {
-            IParameterSymbol parameter = method.Parameters[i];
-            writer.Write($"{parameter.Name}");
-            if (i < method.Parameters.Length - 1)
-            {
-                writer.Write(", ");
-            }
-        }
-        writer.Write(')');
+
+        AppendCallToDecoratedInstance(writer, method);
+
         if (awaitable)
         {
             writer.Write(".ConfigureAwait(false)");
@@ -141,6 +139,40 @@ internal static class SourceGenerationHelper
         AppendAfterMethodSection(writer, loggerDelegateAfterVariable, methodToGenerate);
 
         writer.EndBlock();
+    }
+
+    private static void AppendCallToDecoratedInstance(IndentedTextWriter writer, IMethodSymbol method)
+    {
+        writer.Write($"_decorated.{method.Name}(");
+        for (int i = 0; i < method.Parameters.Length; i++)
+        {
+            IParameterSymbol parameter = method.Parameters[i];
+            writer.Write($"{parameter.Name}");
+            if (i < method.Parameters.Length - 1)
+            {
+                writer.Write(", ");
+            }
+        }
+        writer.Write(')');
+    }
+
+    private static void AppendMethodSignature(IndentedTextWriter writer, MethodToGenerate methodToGenerate)
+    {
+        IMethodSymbol method = methodToGenerate.MethodSymbol;
+        bool awaitable = methodToGenerate.Awaitable;
+        bool passThrough = methodToGenerate.LogLevel == null;
+
+        writer.Write($"public {(awaitable && !passThrough ? "async " : string.Empty)}{method.ReturnType.ToFullyQualifiedDisplayString()} {method.Name}(");
+        for (int i = 0; i < method.Parameters.Length; i++)
+        {
+            IParameterSymbol parameter = method.Parameters[i];
+            writer.Write($"{parameter.Type.ToFullyQualifiedDisplayString()} {parameter.Name}");
+            if (i < method.Parameters.Length - 1)
+            {
+                writer.Write(", ");
+            }
+        }
+        writer.WriteLine(")");
     }
 
     private static void AppendBeforeMethodSection(IndentedTextWriter writer, string loggerDelegateBeforeVariable, MethodToGenerate method)

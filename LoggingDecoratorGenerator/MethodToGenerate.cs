@@ -10,7 +10,7 @@ internal class MethodToGenerate
 
     public IReadOnlyList<Parameter> Parameters { get; }
 
-    public string LogLevel { get; }
+    public string? LogLevel { get; }
 
     public string EventId { get; }
 
@@ -32,7 +32,11 @@ internal class MethodToGenerate
 
     public string ExceptionLogLevel { get; private set; }
 
-    public MethodToGenerate(IMethodSymbol methodSymbol, string interfaceLogLevel, INamedTypeSymbol methodMarkerAttribute, INamedTypeSymbol notLoggedAttribute)
+    public MethodToGenerate(
+        IMethodSymbol methodSymbol,
+        string? interfaceLogLevel,
+        INamedTypeSymbol methodMarkerAttribute,
+        INamedTypeSymbol notLoggedAttribute)
     {
         MethodSymbol = methodSymbol;
         UniqueName = methodSymbol.Name; // assume no overloads at first
@@ -60,7 +64,7 @@ internal class MethodToGenerate
                 switch (arg.Key)
                 {
                     case Attributes.LogMethodLevelName when typedConstant.Value is int logLevel:
-                        LogLevel = $"{LogLevelEnumFullName}.{DecoratorGenerator.ConvertLogLevel(logLevel)}";
+                        LogLevel = $"{LogLevelEnumFullName}.{LogLevelConverter.FromInt(logLevel)}";
                         break;
                     case Attributes.LogMethodEventIdName when typedConstant.Value is int eventId:
                         EventId = eventId.ToString();
@@ -75,7 +79,7 @@ internal class MethodToGenerate
                         ExceptionTypeToLog = exceptionToLog.ToFullyQualifiedDisplayString();
                         break;
                     case Attributes.LogMethodExceptionLogLevelName when typedConstant.Value is int exceptionLogLevel:
-                        ExceptionLogLevel = $"{LogLevelEnumFullName}.{DecoratorGenerator.ConvertLogLevel(exceptionLogLevel)}";
+                        ExceptionLogLevel = $"{LogLevelEnumFullName}.{LogLevelConverter.FromInt(exceptionLogLevel)}";
                         break;
                 }
             }

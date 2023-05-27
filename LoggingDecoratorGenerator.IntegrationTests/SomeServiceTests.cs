@@ -19,6 +19,22 @@ public class SomeServiceTests
     }
 
     [Fact]
+    public void PassThroughMethodDoesNotCallLogger()
+    {
+        // Arrange
+        ILogger<ISomeService> fakeLogger = A.Fake<ILogger<ISomeService>>();
+        var decorator = new SomeServiceLoggingDecorator(fakeLogger, _fakeService);
+        A.CallTo(() => _fakeService.Dispose()).DoesNothing();
+
+        // Act
+        decorator.Dispose();
+
+        // Assert
+        A.CallTo(() => _fakeService.Dispose()).MustHaveHappenedOnceExactly();
+        A.CallTo(fakeLogger).MustNotHaveHappened();
+    }
+
+    [Fact]
     public void SynchronousMethod_DecoratorLogsAndCallsDecoratedInstance()
     {
         // Arrange

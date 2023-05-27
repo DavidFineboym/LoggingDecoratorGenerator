@@ -57,7 +57,9 @@ If you're not familiar with Source Generators, read here https://learn.microsoft
 
 ## Limitations
 
-Currently it supports simple interfaces, only with methods as its members and up to 6 parameters in a method which is what `LoggerMessage.Define` supports (https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.logging.loggermessage.define?view=dotnet-plat-ext-7.0).
+Currently it supports non-generic interfaces, only with methods as its members and up to 6 parameters in a method which is what `LoggerMessage.Define` supports
+(https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.logging.loggermessage.define?view=dotnet-plat-ext-7.0). To work around 6 parameters limitation, you can encapsulate some
+parameters in a class or a struct or omit them from logging using `[NotLogged]` attribute.
 
 ## Feedback
 
