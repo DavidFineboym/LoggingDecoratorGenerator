@@ -21,10 +21,11 @@ public class DecoratorGenerator : IIncrementalGenerator
 
         // Do a simple filter for interfaces
         IncrementalValuesProvider<InterfaceDeclarationSyntax> interfaceDeclarations = context.SyntaxProvider
-            .CreateSyntaxProvider(
-                predicate: static (s, _) => IsSyntaxTargetForGeneration(s), // select interfaces with attributes
-                transform: static (ctx, _) => GetSemanticTargetForGeneration(ctx)) // select the interface with the [DecorateWithLogger] attribute
-            .Where(predicate: static m => m is not null)!; // filter out attributed interfaces that we don't care about
+            .ForAttributeWithMetadataName(
+                Attributes.DecorateWithLoggerFullName,
+                predicate: static (node, _) => node is InterfaceDeclarationSyntax,
+                transform: static (context, _) => context.TargetNode as InterfaceDeclarationSyntax)
+            .Where(predicate: static m => m is not null)!;
 
         // Combine the selected interfaces with the `Compilation`
         IncrementalValueProvider<(Compilation, ImmutableArray<InterfaceDeclarationSyntax>)> compilationAndInterfaces
@@ -32,39 +33,6 @@ public class DecoratorGenerator : IIncrementalGenerator
 
         // Generate the source using the compilation and interfaces
         context.RegisterSourceOutput(source: compilationAndInterfaces, action: static (spc, source) => Execute(source.Item1, source.Item2, spc));
-    }
-
-    private static bool IsSyntaxTargetForGeneration(SyntaxNode node)
-        => node is InterfaceDeclarationSyntax m && m.AttributeLists.Count > 0;
-
-    private static InterfaceDeclarationSyntax? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
-    {
-        // we know the node is a InterfaceDeclarationSyntax thanks to IsSyntaxTargetForGeneration
-        var interfaceDeclarationSyntax = (InterfaceDeclarationSyntax)context.Node;
-
-        // loop through all the attributes on the interface
-        foreach (AttributeListSyntax attributeListSyntax in interfaceDeclarationSyntax.AttributeLists)
-        {
-            foreach (AttributeSyntax attributeSyntax in attributeListSyntax.Attributes)
-            {
-                if (context.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
-                {
-                    // weird, we couldn't get the symbol, ignore it
-                    continue;
-                }
-
-                INamedTypeSymbol attributeContainingTypeSymbol = attributeSymbol.ContainingType;
-                string fullName = attributeContainingTypeSymbol.ToDisplayString();
-
-                if (fullName == Attributes.DecorateWithLoggerFullName)
-                {
-                    return interfaceDeclarationSyntax;
-                }
-            }
-        }
-
-        // we didn't find the attribute we were looking for
-        return null;
     }
 
     private static void Execute(Compilation compilation, ImmutableArray<InterfaceDeclarationSyntax> interfaces, SourceProductionContext context)
