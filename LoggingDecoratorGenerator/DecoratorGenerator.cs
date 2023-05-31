@@ -51,6 +51,7 @@ public class DecoratorGenerator : IIncrementalGenerator
 
         foreach (var interfaceToGenerate in interfacesToGenerate)
         {
+            context.CancellationToken.ThrowIfCancellationRequested();
             (string className, string source) = SourceGenerationHelper.GenerateLoggingDecoratorClass(interfaceToGenerate);
             context.AddSource(hintName: $"{className}.g.cs", sourceText: SourceText.From(text: source, encoding: Encoding.UTF8));
         }
