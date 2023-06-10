@@ -1,16 +1,17 @@
 ![image](https://github.com/DavidFineboym/LoggingDecoratorGenerator/actions/workflows/dotnet.yml/badge.svg?event=push)
 # Logging Decorator Source Generator
 
-Generates logger decorator class for an interface. Uses `Microsoft.Extensions.Logging.ILogger` to log and requires it in decorator class constructor.
-Logs method parameters and return value(can omit from log using `[NotLoggedAttribute]`).
-Supports async methods. Supports log level, event id, and event name override through attribute.
-Can catch and log specific exceptions.
-Can measure method duration for performance reporting.
-Follows high-performance logging guidance by .NET team-> https://learn.microsoft.com/en-us/dotnet/core/extensions/high-performance-logging
+Generates logger decorator class for an interface at compile time(*no runtime reflection*). Uses `Microsoft.Extensions.Logging.ILogger` to log and requires it in decorator class constructor.
+- Logs method parameters and return value(can omit secrets from log using `[NotLoggedAttribute]`)
+- Supports async methods
+- Supports log level, event id, and event name override through attribute
+- Can catch and log specific exceptions
+- Can measure method duration for performance reporting
+- Follows [High-performance logging in .NET] (https://learn.microsoft.com/en-us/dotnet/core/extensions/high-performance-logging) guidance
 
 ## Getting started
 
-NuGet: https://www.nuget.org/packages/Fineboym.Logging.Generator/
+Install the package from [NuGet] (https://www.nuget.org/packages/Fineboym.Logging.Generator)
 
 Use `[DecorateWithLogger]` attribute in `Fineboym.Logging.Attributes` namespace on an interface. In Visual Studio you can see the generated code in Solution Explorer if you expand Dependencies->Analyzers->Fineboym.Logging.Generator.
 

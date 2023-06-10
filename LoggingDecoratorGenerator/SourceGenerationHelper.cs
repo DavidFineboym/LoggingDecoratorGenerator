@@ -10,21 +10,21 @@ internal static class SourceGenerationHelper
                $"\"{typeof(SourceGenerationHelper).Assembly.GetName().Name}\", " +
                $"\"{typeof(SourceGenerationHelper).Assembly.GetName().Version}\")]";
 
-    public static (string className, string source) GenerateLoggingDecoratorClass(InterfaceToGenerate interfaceToGenerate)
+    public static string GenerateLoggingDecoratorClass(DecoratorClass decoratorClass)
     {
         using StringWriter stringWriter = new();
         using IndentedTextWriter writer = new(stringWriter, "    ");
         writer.WriteLine("#nullable enable");
         writer.WriteLine();
-        writer.WriteLine($"namespace {interfaceToGenerate.Namespace}");
+        writer.WriteLine($"namespace {decoratorClass.Namespace}");
         writer.StartBlock();
 
-        string interfaceName = interfaceToGenerate.Name;
-        string className = $"{(interfaceName[0] == 'I' ? interfaceName.Substring(1) : interfaceName)}LoggingDecorator";
+        string interfaceName = decoratorClass.InterfaceName;
+        string className = decoratorClass.ClassName;
         string loggerType = $"global::Microsoft.Extensions.Logging.ILogger<{interfaceName}>";
 
         writer.WriteLine(s_generatedCodeAttribute);
-        writer.WriteLine($"{interfaceToGenerate.DeclaredAccessibility} sealed class {className} : {interfaceName}");
+        writer.WriteLine($"{decoratorClass.DeclaredAccessibility} sealed class {className} : {interfaceName}");
         writer.StartBlock();
         writer.WriteLine($"private readonly {loggerType} _logger;");
         writer.WriteLine($"private readonly {interfaceName} _decorated;");
@@ -32,7 +32,7 @@ internal static class SourceGenerationHelper
 
         AppendConstructor(writer, className, interfaceName, loggerType);
 
-        foreach (MethodToGenerate methodToGenerate in interfaceToGenerate.Methods)
+        foreach (MethodToGenerate methodToGenerate in decoratorClass.Methods)
         {
             writer.WriteLineNoTabs(null);
 
@@ -53,7 +53,7 @@ internal static class SourceGenerationHelper
 
         writer.Flush();
 
-        return (className, stringWriter.ToString());
+        return stringWriter.ToString();
     }
 
     private static void AppendConstructor(IndentedTextWriter writer, string className, string interfaceName, string loggerType)

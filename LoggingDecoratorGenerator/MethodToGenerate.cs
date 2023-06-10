@@ -6,13 +6,15 @@ internal class MethodToGenerate
 {
     private const string LogLevelEnumFullName = "global::Microsoft.Extensions.Logging.LogLevel";
 
+    public static int DefaultEventId { get; } = -1;
+
     public IMethodSymbol MethodSymbol { get; }
 
     public IReadOnlyList<Parameter> Parameters { get; }
 
     public string? LogLevel { get; }
 
-    public string EventId { get; }
+    public int EventId { get; }
 
     public string EventName { get; }
 
@@ -42,7 +44,7 @@ internal class MethodToGenerate
         UniqueName = methodSymbol.Name; // assume no overloads at first
         CheckReturnType(methodSymbol.ReturnType);
         LogLevel = interfaceLogLevel;
-        EventId = "-1";
+        EventId = DefaultEventId;
         EventName = $"nameof({methodSymbol.Name})";
         ExceptionLogLevel = $"{LogLevelEnumFullName}.Error"; // default log level
 
@@ -58,7 +60,7 @@ internal class MethodToGenerate
                 TypedConstant typedConstant = arg.Value;
                 if (typedConstant.Kind == TypedConstantKind.Error)
                 {
-                    break;
+                    throw new CompilerErrorException();
                 }
 
                 switch (arg.Key)
@@ -67,7 +69,7 @@ internal class MethodToGenerate
                         LogLevel = $"{LogLevelEnumFullName}.{LogLevelConverter.FromInt(logLevel)}";
                         break;
                     case Attributes.LogMethodEventIdName when typedConstant.Value is int eventId:
-                        EventId = eventId.ToString();
+                        EventId = eventId;
                         break;
                     case Attributes.LogMethodEventNameName when typedConstant.Value is string eventName:
                         EventName = $"\"{eventName}\"";
