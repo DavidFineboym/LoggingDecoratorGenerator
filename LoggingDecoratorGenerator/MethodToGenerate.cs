@@ -33,7 +33,7 @@ internal class MethodToGenerate
     public string? ExceptionTypeToLog { get; private set; }
 
     public string ExceptionLogLevel { get; private set; }
-
+    // TODO: Refactor to MethodParser and add diagnostics for unsupported parameters- ref, out...
     public MethodToGenerate(
         IMethodSymbol methodSymbol,
         string? interfaceLogLevel,

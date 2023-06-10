@@ -55,7 +55,4 @@ public class DecoratorGenerator : IIncrementalGenerator
             context.AddSource(hintName: $"{decoratorClass.ClassName}.g.cs", sourceText: SourceText.From(text: source, encoding: Encoding.UTF8));
         }
     }
-    // TODO : 1. Add example to README with Scrutor and DI, add test for this?
-    // 3. Add diagnostics for unsupported things
-    // 4. Make links more readable in README
 }

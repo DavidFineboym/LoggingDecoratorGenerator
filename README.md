@@ -7,11 +7,11 @@ Generates logger decorator class for an interface at compile time(*no runtime re
 - Supports log level, event id, and event name override through attribute
 - Can catch and log specific exceptions
 - Can measure method duration for performance reporting
-- Follows [High-performance logging in .NET] (https://learn.microsoft.com/en-us/dotnet/core/extensions/high-performance-logging) guidance
+- Follows [High-performance logging in .NET](https://learn.microsoft.com/en-us/dotnet/core/extensions/high-performance-logging) guidance
 
 ## Getting started
 
-Install the package from [NuGet] (https://www.nuget.org/packages/Fineboym.Logging.Generator)
+Install the package from [NuGet](https://www.nuget.org/packages/Fineboym.Logging.Generator)
 
 Use `[DecorateWithLogger]` attribute in `Fineboym.Logging.Attributes` namespace on an interface. In Visual Studio you can see the generated code in Solution Explorer if you expand Dependencies->Analyzers->Fineboym.Logging.Generator.
 
@@ -52,16 +52,17 @@ This will create a generated class named `SomeServiceLoggingDecorator` in the sa
 
 ## Additional documentation
 
-If you use .NET dependency injection, then you can decorate your service interface using, for example, Scrutor-> https://github.com/khellang/Scrutor
-Go here for explanation-> https://andrewlock.net/adding-decorated-classes-to-the-asp.net-core-di-container-using-scrutor/
-If you're not familiar with Source Generators, read here https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview
+If you use .NET dependency injection, then you can decorate your service interface. You can do it yourself or use [Scrutor](https://github.com/khellang/Scrutor).
+Here is an explanation [Adding decorated classes to the ASP.NET Core DI container using Scrutor](https://andrewlock.net/adding-decorated-classes-to-the-asp.net-core-di-container-using-scrutor).
+If you're not familiar with Source Generators, read [Source Generators](https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview).
 
 ## Limitations
 
-Currently it supports non-generic interfaces, only with methods as its members and up to 6 parameters in a method which is what `LoggerMessage.Define` supports
-(https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.logging.loggermessage.define?view=dotnet-plat-ext-7.0). To work around 6 parameters limitation, you can encapsulate some
+Currently it supports non-generic interfaces, only with methods as its members and up to 6 parameters in a method which is what 
+[LoggerMessage.Define Method](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.logging.loggermessage.define?view=dotnet-plat-ext-7.0) 
+supports. To work around 6 parameters limitation, you can encapsulate some
 parameters in a class or a struct or omit them from logging using `[NotLogged]` attribute.
 
 ## Feedback
 
-Please go to https://github.com/DavidFineboym/LoggingDecoratorGenerator for feedback. Feel free to open issues for questions, bugs, and improvements and I'll try to address them as soon as I can. Thank you.
+Please go to [GitHub repository](https://github.com/DavidFineboym/LoggingDecoratorGenerator) for feedback. Feel free to open issues for questions, bugs, and improvements and I'll try to address them as soon as I can. Thank you.
