@@ -49,6 +49,158 @@ public interface ISomeService
 }
 ```
 This will create a generated class named `SomeServiceLoggingDecorator` in the same namespace as the interface.
+<details><summary>Click to see the generated code</summary>
+
+```C#
+#nullable enable
+
+namespace SomeFolder.SomeSubFolder
+{
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Fineboym.Logging.Generator", "1.7.0.0")]
+    public sealed class SomeServiceLoggingDecorator : ISomeService
+    {
+        private readonly global::Microsoft.Extensions.Logging.ILogger<ISomeService> _logger;
+        private readonly ISomeService _decorated;
+
+        public SomeServiceLoggingDecorator(global::Microsoft.Extensions.Logging.ILogger<ISomeService> logger, ISomeService decorated)
+        {
+            _logger = logger;
+            _decorated = decorated;
+        }
+
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.DateTime, global::System.Exception?> s_beforeSomeMethod
+            = global::Microsoft.Extensions.Logging.LoggerMessage.Define<global::System.DateTime>(
+                global::Microsoft.Extensions.Logging.LogLevel.Debug,
+                new global::Microsoft.Extensions.Logging.EventId(-1, nameof(SomeMethod)),
+                "Entering SomeMethod with parameters: someDateTime = {someDateTime}",
+                new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
+
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, int, global::System.Exception?> s_afterSomeMethod
+            = global::Microsoft.Extensions.Logging.LoggerMessage.Define<int>(
+                global::Microsoft.Extensions.Logging.LogLevel.Debug,
+                new global::Microsoft.Extensions.Logging.EventId(-1, nameof(SomeMethod)),
+                "Method SomeMethod returned. Result = {result}",
+                new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
+
+        public int SomeMethod(global::System.DateTime someDateTime)
+        {
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            {
+                s_beforeSomeMethod(_logger, someDateTime, null);
+            }
+            var __result = _decorated.SomeMethod(someDateTime);
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            {
+                s_afterSomeMethod(_logger, __result, null);
+            }
+            return __result;
+        }
+
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, string?, global::System.Exception?> s_beforeSomeAsyncMethod
+            = global::Microsoft.Extensions.Logging.LoggerMessage.Define<string?>(
+                global::Microsoft.Extensions.Logging.LogLevel.Information,
+                new global::Microsoft.Extensions.Logging.EventId(100, nameof(SomeAsyncMethod)),
+                "Entering SomeAsyncMethod with parameters: s = {s}",
+                new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
+
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, double?, double?, global::System.Exception?> s_afterSomeAsyncMethod
+            = global::Microsoft.Extensions.Logging.LoggerMessage.Define<double?, double?>(
+                global::Microsoft.Extensions.Logging.LogLevel.Information,
+                new global::Microsoft.Extensions.Logging.EventId(100, nameof(SomeAsyncMethod)),
+                "Method SomeAsyncMethod returned. Result = {result}. DurationInMilliseconds = {durationInMilliseconds}",
+                new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
+
+        public async global::System.Threading.Tasks.Task<double?> SomeAsyncMethod(string? s)
+        {
+            global::System.Diagnostics.Stopwatch? __stopwatch = null;
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Information))
+            {
+                s_beforeSomeAsyncMethod(_logger, s, null);
+                __stopwatch = global::System.Diagnostics.Stopwatch.StartNew();
+            }
+            var __result = await _decorated.SomeAsyncMethod(s).ConfigureAwait(false);
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Information))
+            {
+                s_afterSomeAsyncMethod(_logger, __result, __stopwatch?.Elapsed.TotalMilliseconds, null);
+            }
+            return __result;
+        }
+
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, int, global::System.Exception?> s_beforeAnotherAsyncMethod
+            = global::Microsoft.Extensions.Logging.LoggerMessage.Define<int>(
+                global::Microsoft.Extensions.Logging.LogLevel.Debug,
+                new global::Microsoft.Extensions.Logging.EventId(-1, nameof(AnotherAsyncMethod)),
+                "Entering AnotherAsyncMethod with parameters: x = {x}",
+                new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
+
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, string, global::System.Exception?> s_afterAnotherAsyncMethod
+            = global::Microsoft.Extensions.Logging.LoggerMessage.Define<string>(
+                global::Microsoft.Extensions.Logging.LogLevel.Debug,
+                new global::Microsoft.Extensions.Logging.EventId(-1, nameof(AnotherAsyncMethod)),
+                "Method AnotherAsyncMethod returned. Result = {result}",
+                new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
+
+        public async global::System.Threading.Tasks.Task<string> AnotherAsyncMethod(int x)
+        {
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            {
+                s_beforeAnotherAsyncMethod(_logger, x, null);
+            }
+            string __result;
+            try
+            {
+                __result = await _decorated.AnotherAsyncMethod(x).ConfigureAwait(false);
+            }
+            catch (global::System.InvalidOperationException __e)
+            {
+                global::Microsoft.Extensions.Logging.LoggerExtensions.Log(
+                    _logger,
+                    global::Microsoft.Extensions.Logging.LogLevel.Error,
+                    new global::Microsoft.Extensions.Logging.EventId(-1, nameof(AnotherAsyncMethod)),
+                    __e,
+                    "AnotherAsyncMethod failed");
+                throw;
+            }
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            {
+                s_afterAnotherAsyncMethod(_logger, __result, null);
+            }
+            return __result;
+        }
+
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, string, global::System.Exception?> s_beforeGetMySecretString
+            = global::Microsoft.Extensions.Logging.LoggerMessage.Define<string>(
+                global::Microsoft.Extensions.Logging.LogLevel.Debug,
+                new global::Microsoft.Extensions.Logging.EventId(-1, nameof(GetMySecretString)),
+                "Entering GetMySecretString with parameters: username = {username}, password = [REDACTED]",
+                new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
+
+        private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Exception?> s_afterGetMySecretString
+            = global::Microsoft.Extensions.Logging.LoggerMessage.Define(
+                global::Microsoft.Extensions.Logging.LogLevel.Debug,
+                new global::Microsoft.Extensions.Logging.EventId(-1, nameof(GetMySecretString)),
+                "Method GetMySecretString returned. Result = [REDACTED]",
+                new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
+
+        public string GetMySecretString(string username, string password)
+        {
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            {
+                s_beforeGetMySecretString(_logger, username, null);
+            }
+            var __result = _decorated.GetMySecretString(username, password);
+            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            {
+                s_afterGetMySecretString(_logger, null);
+            }
+            return __result;
+        }
+    }
+}
+
+```
+
+</details>
 
 ## Additional documentation
 
