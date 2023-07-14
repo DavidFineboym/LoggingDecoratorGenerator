@@ -56,7 +56,7 @@ This will create a generated class named `SomeServiceLoggingDecorator` in the sa
 
 namespace SomeFolder.SomeSubFolder
 {
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Fineboym.Logging.Generator", "1.7.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Fineboym.Logging.Generator", "1.8.0.0")]
     public sealed class SomeServiceLoggingDecorator : ISomeService
     {
         private readonly global::Microsoft.Extensions.Logging.ILogger<ISomeService> _logger;
@@ -71,14 +71,14 @@ namespace SomeFolder.SomeSubFolder
         private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.DateTime, global::System.Exception?> s_beforeSomeMethod
             = global::Microsoft.Extensions.Logging.LoggerMessage.Define<global::System.DateTime>(
                 global::Microsoft.Extensions.Logging.LogLevel.Debug,
-                new global::Microsoft.Extensions.Logging.EventId(-1, nameof(SomeMethod)),
+                new global::Microsoft.Extensions.Logging.EventId(15022964, nameof(SomeMethod)),
                 "Entering SomeMethod with parameters: someDateTime = {someDateTime}",
                 new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
 
         private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, int, global::System.Exception?> s_afterSomeMethod
             = global::Microsoft.Extensions.Logging.LoggerMessage.Define<int>(
                 global::Microsoft.Extensions.Logging.LogLevel.Debug,
-                new global::Microsoft.Extensions.Logging.EventId(-1, nameof(SomeMethod)),
+                new global::Microsoft.Extensions.Logging.EventId(15022964, nameof(SomeMethod)),
                 "Method SomeMethod returned. Result = {result}",
                 new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
 
@@ -129,14 +129,14 @@ namespace SomeFolder.SomeSubFolder
         private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, int, global::System.Exception?> s_beforeAnotherAsyncMethod
             = global::Microsoft.Extensions.Logging.LoggerMessage.Define<int>(
                 global::Microsoft.Extensions.Logging.LogLevel.Debug,
-                new global::Microsoft.Extensions.Logging.EventId(-1, nameof(AnotherAsyncMethod)),
+                new global::Microsoft.Extensions.Logging.EventId(2017861863, nameof(AnotherAsyncMethod)),
                 "Entering AnotherAsyncMethod with parameters: x = {x}",
                 new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
 
         private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, string, global::System.Exception?> s_afterAnotherAsyncMethod
             = global::Microsoft.Extensions.Logging.LoggerMessage.Define<string>(
                 global::Microsoft.Extensions.Logging.LogLevel.Debug,
-                new global::Microsoft.Extensions.Logging.EventId(-1, nameof(AnotherAsyncMethod)),
+                new global::Microsoft.Extensions.Logging.EventId(2017861863, nameof(AnotherAsyncMethod)),
                 "Method AnotherAsyncMethod returned. Result = {result}",
                 new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
 
@@ -156,7 +156,7 @@ namespace SomeFolder.SomeSubFolder
                 global::Microsoft.Extensions.Logging.LoggerExtensions.Log(
                     _logger,
                     global::Microsoft.Extensions.Logging.LogLevel.Error,
-                    new global::Microsoft.Extensions.Logging.EventId(-1, nameof(AnotherAsyncMethod)),
+                    new global::Microsoft.Extensions.Logging.EventId(2017861863, nameof(AnotherAsyncMethod)),
                     __e,
                     "AnotherAsyncMethod failed");
                 throw;
@@ -171,14 +171,14 @@ namespace SomeFolder.SomeSubFolder
         private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, string, global::System.Exception?> s_beforeGetMySecretString
             = global::Microsoft.Extensions.Logging.LoggerMessage.Define<string>(
                 global::Microsoft.Extensions.Logging.LogLevel.Debug,
-                new global::Microsoft.Extensions.Logging.EventId(-1, nameof(GetMySecretString)),
+                new global::Microsoft.Extensions.Logging.EventId(1921103492, nameof(GetMySecretString)),
                 "Entering GetMySecretString with parameters: username = {username}, password = [REDACTED]",
                 new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
 
         private static readonly global::System.Action<global::Microsoft.Extensions.Logging.ILogger, global::System.Exception?> s_afterGetMySecretString
             = global::Microsoft.Extensions.Logging.LoggerMessage.Define(
                 global::Microsoft.Extensions.Logging.LogLevel.Debug,
-                new global::Microsoft.Extensions.Logging.EventId(-1, nameof(GetMySecretString)),
+                new global::Microsoft.Extensions.Logging.EventId(1921103492, nameof(GetMySecretString)),
                 "Method GetMySecretString returned. Result = [REDACTED]",
                 new global::Microsoft.Extensions.Logging.LogDefineOptions() { SkipEnabledCheck = true });
 
@@ -217,4 +217,4 @@ parameters in a class or a struct or omit them from logging using `[NotLogged]` 
 
 ## Feedback
 
-Please go to [GitHub repository](https://github.com/DavidFineboym/LoggingDecoratorGenerator) for feedback. Feel free to open issues for questions, bugs, and improvements and I'll try to address them as soon as I can. Thank you.
+Feel free to open issues here for questions, bugs, and improvements and I'll try to address them as soon as I can. Thank you.

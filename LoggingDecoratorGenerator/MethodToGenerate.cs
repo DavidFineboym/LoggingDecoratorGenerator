@@ -6,8 +6,6 @@ internal class MethodToGenerate
 {
     private const string LogLevelEnumFullName = "global::Microsoft.Extensions.Logging.LogLevel";
 
-    public static int DefaultEventId { get; } = -1;
-
     public IMethodSymbol MethodSymbol { get; }
 
     public IReadOnlyList<Parameter> Parameters { get; }
@@ -44,9 +42,8 @@ internal class MethodToGenerate
         UniqueName = methodSymbol.Name; // assume no overloads at first
         CheckReturnType(methodSymbol.ReturnType);
         LogLevel = interfaceLogLevel;
-        EventId = DefaultEventId;
-        EventName = $"nameof({methodSymbol.Name})";
-        ExceptionLogLevel = $"{LogLevelEnumFullName}.Error"; // default log level
+        bool suppliedEventId = false;
+        string? suppliedEventName = null;
 
         foreach (AttributeData attributeData in methodSymbol.GetAttributes())
         {
@@ -70,9 +67,10 @@ internal class MethodToGenerate
                         break;
                     case Attributes.LogMethodEventIdName when typedConstant.Value is int eventId:
                         EventId = eventId;
+                        suppliedEventId = true;
                         break;
                     case Attributes.LogMethodEventNameName when typedConstant.Value is string eventName:
-                        EventName = $"\"{eventName}\"";
+                        suppliedEventName = eventName;
                         break;
                     case Attributes.LogMethodMeasureDurationName when typedConstant.Value is bool measureDuration:
                         MeasureDuration = measureDuration;
@@ -87,6 +85,18 @@ internal class MethodToGenerate
             }
 
             break;
+        }
+
+        if (!suppliedEventId)
+        {
+            EventId = GetNonRandomizedHashCode(string.IsNullOrWhiteSpace(suppliedEventName) ? methodSymbol.Name : suppliedEventName!);
+        }
+
+        EventName = string.IsNullOrWhiteSpace(suppliedEventName) ? $"nameof({methodSymbol.Name})" : $"\"{suppliedEventName}\"";
+
+        if (ExceptionLogLevel == default)
+        {
+            ExceptionLogLevel = $"{LogLevelEnumFullName}.Error"; // default log level
         }
 
         var parameters = new List<Parameter>(capacity: methodSymbol.Parameters.Length);
@@ -123,5 +133,19 @@ internal class MethodToGenerate
 
         Awaitable = false;
         HasReturnValue = methodReturnType.SpecialType != SpecialType.System_Void;
+    }
+
+    /// <summary>
+    /// Returns a non-randomized hash code for the given string.
+    /// We always return a positive value.
+    /// </summary>
+    private static int GetNonRandomizedHashCode(string s)
+    {
+        uint result = 2166136261u;
+        foreach (char c in s)
+        {
+            result = (c ^ result) * 16777619;
+        }
+        return Math.Abs((int)result);
     }
 }

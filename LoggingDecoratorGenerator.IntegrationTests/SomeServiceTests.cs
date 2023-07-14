@@ -52,7 +52,7 @@ public class SomeServiceTests
         Assert.Equal(2, _testSink.Writes.Count);
 
         WriteContext firstWrite = _testSink.Writes.First();
-        Assert.Equal(-1, firstWrite.EventId.Id);
+        Assert.Equal(963397959, firstWrite.EventId.Id);
         Assert.Equal("DateTimeReturningMethod", firstWrite.EventId.Name);
         Assert.Equal(LogLevel.Debug, firstWrite.LogLevel);
         Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.ISomeService", firstWrite.LoggerName);
@@ -68,7 +68,7 @@ public class SomeServiceTests
         LogValuesAssert.Contains(expectedBeforeWriteState, beforeWriteState);
 
         WriteContext lastWrite = _testSink.Writes.Last();
-        Assert.Equal(-1, lastWrite.EventId.Id);
+        Assert.Equal(963397959, lastWrite.EventId.Id);
         Assert.Equal("DateTimeReturningMethod", lastWrite.EventId.Name);
         Assert.Equal(LogLevel.Debug, lastWrite.LogLevel);
         Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.ISomeService", lastWrite.LoggerName);
@@ -104,7 +104,7 @@ public class SomeServiceTests
         Assert.Equal(2, _testSink.Writes.Count);
 
         WriteContext firstWrite = _testSink.Writes.First();
-        Assert.Equal(-1, firstWrite.EventId.Id);
+        Assert.Equal(1921103492, firstWrite.EventId.Id);
         Assert.Equal("GetMySecretString", firstWrite.EventId.Name);
         Assert.Equal(LogLevel.Debug, firstWrite.LogLevel);
         Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.ISomeService", firstWrite.LoggerName);
@@ -121,7 +121,7 @@ public class SomeServiceTests
         LogValuesAssert.Contains(expectedBeforeWriteState, beforeWriteState);
 
         WriteContext lastWrite = _testSink.Writes.Last();
-        Assert.Equal(-1, lastWrite.EventId.Id);
+        Assert.Equal(1921103492, lastWrite.EventId.Id);
         Assert.Equal("GetMySecretString", lastWrite.EventId.Name);
         Assert.Equal(LogLevel.Debug, lastWrite.LogLevel);
         Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.ISomeService", lastWrite.LoggerName);

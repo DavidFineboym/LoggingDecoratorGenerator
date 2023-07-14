@@ -38,7 +38,7 @@ public class InformationLevelInterfaceTests
         Assert.Equal(2, _testSink.Writes.Count);
 
         WriteContext firstWrite = _testSink.Writes.First();
-        Assert.Equal(-1, firstWrite.EventId.Id);
+        Assert.Equal(1514124652, firstWrite.EventId.Id);
         Assert.Equal("MethodWithoutAttribute", firstWrite.EventId.Name);
         Assert.Equal(LogLevel.Information, firstWrite.LogLevel);
         Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface", firstWrite.LoggerName);
@@ -55,7 +55,7 @@ public class InformationLevelInterfaceTests
         LogValuesAssert.Contains(expectedBeforeWriteState, beforeWriteState);
 
         WriteContext lastWrite = _testSink.Writes.Last();
-        Assert.Equal(-1, lastWrite.EventId.Id);
+        Assert.Equal(1514124652, lastWrite.EventId.Id);
         Assert.Equal("MethodWithoutAttribute", lastWrite.EventId.Name);
         Assert.Equal(LogLevel.Information, lastWrite.LogLevel);
         Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface", lastWrite.LoggerName);
@@ -159,7 +159,7 @@ public class InformationLevelInterfaceTests
         Assert.Equal(2, _testSink.Writes.Count);
 
         WriteContext firstWrite = _testSink.Writes.First();
-        Assert.Equal(-1, firstWrite.EventId.Id);
+        Assert.Equal(1711224704, firstWrite.EventId.Id);
         Assert.Equal("MethodWithMeasuredDurationAsync", firstWrite.EventId.Name);
         Assert.Equal(LogLevel.Information, firstWrite.LogLevel);
         Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface", firstWrite.LoggerName);
@@ -175,7 +175,7 @@ public class InformationLevelInterfaceTests
         LogValuesAssert.Contains(expectedBeforeWriteState, beforeWriteState);
 
         WriteContext lastWrite = _testSink.Writes.Last();
-        Assert.Equal(-1, lastWrite.EventId.Id);
+        Assert.Equal(1711224704, lastWrite.EventId.Id);
         Assert.Equal("MethodWithMeasuredDurationAsync", lastWrite.EventId.Name);
         Assert.Equal(LogLevel.Information, lastWrite.LogLevel);
         Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface", lastWrite.LoggerName);
