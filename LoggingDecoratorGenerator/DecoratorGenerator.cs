@@ -51,7 +51,7 @@ public class DecoratorGenerator : IIncrementalGenerator
         foreach (var decoratorClass in decoratorClasses)
         {
             context.CancellationToken.ThrowIfCancellationRequested();
-            string source = SourceGenerationHelper.GenerateLoggingDecoratorClass(decoratorClass);
+            string source = SourceGenerationHelper.GenerateLoggingDecoratorClass(decoratorClass, p.StopwatchGetElapsedTimeAvailable);
             context.AddSource(hintName: $"{decoratorClass.ClassName}.g.cs", sourceText: SourceText.From(text: source, encoding: Encoding.UTF8));
         }
     }
