@@ -56,7 +56,7 @@ This will create a generated class named `SomeServiceLoggingDecorator` in the sa
 
 namespace SomeFolder.SomeSubFolder
 {
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Fineboym.Logging.Generator", "1.8.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Fineboym.Logging.Generator", "1.9.0.0")]
     public sealed class SomeServiceLoggingDecorator : ISomeService
     {
         private readonly global::Microsoft.Extensions.Logging.ILogger<ISomeService> _logger;
@@ -84,12 +84,13 @@ namespace SomeFolder.SomeSubFolder
 
         public int SomeMethod(global::System.DateTime someDateTime)
         {
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            var __logEnabled = _logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug);
+            if (__logEnabled)
             {
                 s_beforeSomeMethod(_logger, someDateTime, null);
             }
             var __result = _decorated.SomeMethod(someDateTime);
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            if (__logEnabled)
             {
                 s_afterSomeMethod(_logger, __result, null);
             }
@@ -112,16 +113,18 @@ namespace SomeFolder.SomeSubFolder
 
         public async global::System.Threading.Tasks.Task<double?> SomeAsyncMethod(string? s)
         {
-            global::System.Diagnostics.Stopwatch? __stopwatch = null;
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Information))
+            var __logEnabled = _logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Information);
+            global::System.Int64 __startTimestamp = 0;
+            if (__logEnabled)
             {
                 s_beforeSomeAsyncMethod(_logger, s, null);
-                __stopwatch = global::System.Diagnostics.Stopwatch.StartNew();
+                __startTimestamp = global::System.Diagnostics.Stopwatch.GetTimestamp();
             }
             var __result = await _decorated.SomeAsyncMethod(s).ConfigureAwait(false);
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Information))
+            if (__logEnabled)
             {
-                s_afterSomeAsyncMethod(_logger, __result, __stopwatch?.Elapsed.TotalMilliseconds, null);
+                var __elapsedTime = global::System.Diagnostics.Stopwatch.GetElapsedTime(__startTimestamp);
+                s_afterSomeAsyncMethod(_logger, __result, __elapsedTime.TotalMilliseconds, null);
             }
             return __result;
         }
@@ -142,7 +145,8 @@ namespace SomeFolder.SomeSubFolder
 
         public async global::System.Threading.Tasks.Task<string> AnotherAsyncMethod(int x)
         {
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            var __logEnabled = _logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug);
+            if (__logEnabled)
             {
                 s_beforeAnotherAsyncMethod(_logger, x, null);
             }
@@ -161,7 +165,7 @@ namespace SomeFolder.SomeSubFolder
                     "AnotherAsyncMethod failed");
                 throw;
             }
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            if (__logEnabled)
             {
                 s_afterAnotherAsyncMethod(_logger, __result, null);
             }
@@ -184,12 +188,13 @@ namespace SomeFolder.SomeSubFolder
 
         public string GetMySecretString(string username, string password)
         {
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            var __logEnabled = _logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug);
+            if (__logEnabled)
             {
                 s_beforeGetMySecretString(_logger, username, null);
             }
             var __result = _decorated.GetMySecretString(username, password);
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            if (__logEnabled)
             {
                 s_afterGetMySecretString(_logger, null);
             }

@@ -137,7 +137,7 @@ public class InformationLevelInterfaceTests
 
         // Assert
         A.CallTo(() => _fakeService.MethodShouldNotBeLoggedBecauseOfLogLevel()).MustHaveHappenedOnceExactly();
-        A.CallTo(() => fakeLogger.IsEnabled(LogLevel.Information)).MustHaveHappenedTwiceExactly();
+        A.CallTo(() => fakeLogger.IsEnabled(LogLevel.Information)).MustHaveHappenedOnceExactly();
         A.CallTo(fakeLogger).Where(call => call.Method.Name == nameof(ILogger.Log)).MustNotHaveHappened();
     }
 

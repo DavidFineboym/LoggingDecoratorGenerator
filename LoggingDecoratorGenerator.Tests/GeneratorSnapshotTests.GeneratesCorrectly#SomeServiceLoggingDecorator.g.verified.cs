@@ -3,7 +3,7 @@
 
 namespace SomeFolder.SomeSubFolder
 {
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Fineboym.Logging.Generator", "1.8.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Fineboym.Logging.Generator", "1.9.0.0")]
     public sealed class SomeServiceLoggingDecorator : ISomeService
     {
         private readonly global::Microsoft.Extensions.Logging.ILogger<ISomeService> _logger;
@@ -31,16 +31,18 @@ namespace SomeFolder.SomeSubFolder
 
         public void VoidParameterlessMethod()
         {
-            global::System.Diagnostics.Stopwatch? __stopwatch = null;
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Trace))
+            var __logEnabled = _logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Trace);
+            global::System.Int64 __startTimestamp = 0;
+            if (__logEnabled)
             {
                 s_beforeVoidParameterlessMethod(_logger, null);
-                __stopwatch = global::System.Diagnostics.Stopwatch.StartNew();
+                __startTimestamp = global::System.Diagnostics.Stopwatch.GetTimestamp();
             }
             _decorated.VoidParameterlessMethod();
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Trace))
+            if (__logEnabled)
             {
-                s_afterVoidParameterlessMethod(_logger, __stopwatch?.Elapsed.TotalMilliseconds, null);
+                var __elapsedTime = global::System.Diagnostics.Stopwatch.GetElapsedTime(__startTimestamp);
+                s_afterVoidParameterlessMethod(_logger, __elapsedTime.TotalMilliseconds, null);
             }
         }
 
@@ -60,12 +62,13 @@ namespace SomeFolder.SomeSubFolder
 
         public int IntReturningMethod(int x, global::OtherFolder.OtherSubFolder.Person person)
         {
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            var __logEnabled = _logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug);
+            if (__logEnabled)
             {
                 s_beforeIntReturningMethod(_logger, x, person, null);
             }
             var __result = _decorated.IntReturningMethod(x, person);
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            if (__logEnabled)
             {
                 s_afterIntReturningMethod(_logger, __result, null);
             }
@@ -88,12 +91,13 @@ namespace SomeFolder.SomeSubFolder
 
         public async global::System.Threading.Tasks.Task TaskReturningAsyncMethod(int x, int y)
         {
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            var __logEnabled = _logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug);
+            if (__logEnabled)
             {
                 s_beforeTaskReturningAsyncMethod(_logger, x, y, null);
             }
             await _decorated.TaskReturningAsyncMethod(x, y).ConfigureAwait(false);
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            if (__logEnabled)
             {
                 s_afterTaskReturningAsyncMethod(_logger, null);
             }
@@ -115,12 +119,13 @@ namespace SomeFolder.SomeSubFolder
 
         public async global::System.Threading.Tasks.Task<int> TaskIntReturningAsyncMethod(int x, int y)
         {
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            var __logEnabled = _logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug);
+            if (__logEnabled)
             {
                 s_beforeTaskIntReturningAsyncMethod(_logger, x, y, null);
             }
             var __result = await _decorated.TaskIntReturningAsyncMethod(x, y).ConfigureAwait(false);
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            if (__logEnabled)
             {
                 s_afterTaskIntReturningAsyncMethod(_logger, __result, null);
             }
@@ -143,12 +148,13 @@ namespace SomeFolder.SomeSubFolder
 
         public async global::System.Threading.Tasks.ValueTask ValueTaskReturningAsyncMethod(int x, int y)
         {
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            var __logEnabled = _logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug);
+            if (__logEnabled)
             {
                 s_beforeValueTaskReturningAsyncMethod(_logger, x, y, null);
             }
             await _decorated.ValueTaskReturningAsyncMethod(x, y).ConfigureAwait(false);
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            if (__logEnabled)
             {
                 s_afterValueTaskReturningAsyncMethod(_logger, null);
             }
@@ -170,12 +176,13 @@ namespace SomeFolder.SomeSubFolder
 
         public async global::System.Threading.Tasks.ValueTask<float> ValueTaskFloatReturningAsyncMethod(int x, int y)
         {
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            var __logEnabled = _logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug);
+            if (__logEnabled)
             {
                 s_beforeValueTaskFloatReturningAsyncMethod(_logger, x, y, null);
             }
             var __result = await _decorated.ValueTaskFloatReturningAsyncMethod(x, y).ConfigureAwait(false);
-            if (_logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug))
+            if (__logEnabled)
             {
                 s_afterValueTaskFloatReturningAsyncMethod(_logger, __result, null);
             }

@@ -9,6 +9,8 @@ internal sealed class Parser
     private readonly Compilation _compilation;
     private readonly Action<Diagnostic> _reportDiagnostic;
 
+    public bool StopwatchGetElapsedTimeAvailable { get; private set; }
+
     public Parser(Compilation compilation, Action<Diagnostic> reportDiagnostic, CancellationToken cancellationToken)
     {
         _compilation = compilation;
@@ -39,6 +41,17 @@ internal sealed class Parser
             // nothing to do if this type isn't available
             return Array.Empty<DecoratorClass>();
         }
+
+        INamedTypeSymbol? stopwatchType = _compilation.GetBestTypeByMetadataName("System.Diagnostics.Stopwatch");
+        if (stopwatchType == null)
+        {
+            return Array.Empty<DecoratorClass>();
+        }
+
+        StopwatchGetElapsedTimeAvailable = stopwatchType.GetMembers("GetElapsedTime")
+            .OfType<IMethodSymbol>()
+            .Where(ms => ms.DeclaredAccessibility == Accessibility.Public && ms.IsStatic)
+            .Any();
 
         var results = new List<DecoratorClass>();
         DecoratorClassParser parser = new(interfaceMarkerAttribute, methodMarkerAttribute, notLoggedAttribute, _reportDiagnostic, _cancellationToken);

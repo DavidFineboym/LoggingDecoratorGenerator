@@ -267,6 +267,8 @@ internal class DecoratorClass
 
     public string ClassName { get; }
 
+    public bool SomeMethodMeasuresDuration { get; }
+
     public DecoratorClass(string @namespace, string interfaceName, string declaredAccessibility, string logLevel, IReadOnlyList<MethodToGenerate> methods)
     {
         Namespace = @namespace;
@@ -275,5 +277,6 @@ internal class DecoratorClass
         LogLevel = logLevel;
         Methods = methods;
         ClassName = $"{(interfaceName[0] == 'I' ? interfaceName.Substring(1) : interfaceName)}LoggingDecorator";
+        SomeMethodMeasuresDuration = methods.Any(static m => m.MeasureDuration);
     }
 }
