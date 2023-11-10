@@ -1,19 +1,19 @@
 ﻿using FakeItEasy;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Testing;
 
 namespace LoggingDecoratorGenerator.IntegrationTests;
 
 public class PolymorphicInterfacesTests
 {
-    private readonly TestSink _testSink;
+    private readonly FakeLogCollector _collector;
     private readonly IDerivedInterface _fakeService;
     private readonly DerivedInterfaceLoggingDecorator _decorator;
 
     public PolymorphicInterfacesTests()
     {
-        _testSink = new();
-        TestLoggerFactory testLoggerFactory = new(_testSink, enabled: true);
-        ILogger<IDerivedInterface> logger = new Logger<IDerivedInterface>(testLoggerFactory);
+        _collector = new();
+        FakeLogger<IDerivedInterface> logger = new(_collector);
         _fakeService = A.Fake<IDerivedInterface>();
         _decorator = new DerivedInterfaceLoggingDecorator(logger, _fakeService);
     }
@@ -54,38 +54,38 @@ public class PolymorphicInterfacesTests
         Assert.Equal(expected: expectedReturnValue, actual: actualReturn);
         A.CallTo(() => _fakeService.MethodWithAttributeAsync(num, secret)).MustHaveHappenedOnceExactly();
 
-        Assert.Equal(2, _testSink.Writes.Count);
+        Assert.Equal(2, _collector.Count);
 
-        WriteContext firstWrite = _testSink.Writes.First();
-        Assert.Equal(7, firstWrite.EventId.Id);
-        Assert.Equal("MethodWithAttributeAsync", firstWrite.EventId.Name);
-        Assert.Equal(LogLevel.Trace, firstWrite.LogLevel);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IDerivedInterface", firstWrite.LoggerName);
+        IReadOnlyList<FakeLogRecord> writes = _collector.GetSnapshot();
+
+        FakeLogRecord firstWrite = writes[0];
+        Assert.Equal(7, firstWrite.Id.Id);
+        Assert.Equal("MethodWithAttributeAsync", firstWrite.Id.Name);
+        Assert.Equal(LogLevel.Trace, firstWrite.Level);
+        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IDerivedInterface", firstWrite.Category);
         Assert.Equal("Entering MethodWithAttributeAsync with parameters: num = 42.3, secret = [REDACTED]", firstWrite.Message);
         Assert.Null(firstWrite.Exception);
-        Assert.Null(firstWrite.Scope);
-        var beforeWriteState = (IReadOnlyList<KeyValuePair<string, object>>)firstWrite.State;
+        Assert.Empty(firstWrite.Scopes);
         KeyValuePair<string, object>[] expectedBeforeWriteState = new[]
         {
             new KeyValuePair<string, object>("num", num),
             new KeyValuePair<string, object>("{OriginalFormat}", "Entering MethodWithAttributeAsync with parameters: num = {num}, secret = [REDACTED]"),
         };
-        LogValuesAssert.Contains(expectedBeforeWriteState, beforeWriteState);
+        Assert.Equivalent(expectedBeforeWriteState, firstWrite.StructuredState, strict: true);
 
-        WriteContext lastWrite = _testSink.Writes.Last();
-        Assert.Equal(7, lastWrite.EventId.Id);
-        Assert.Equal("MethodWithAttributeAsync", lastWrite.EventId.Name);
-        Assert.Equal(LogLevel.Trace, lastWrite.LogLevel);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IDerivedInterface", lastWrite.LoggerName);
+        FakeLogRecord lastWrite = writes[1];
+        Assert.Equal(7, lastWrite.Id.Id);
+        Assert.Equal("MethodWithAttributeAsync", lastWrite.Id.Name);
+        Assert.Equal(LogLevel.Trace, lastWrite.Level);
+        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IDerivedInterface", lastWrite.Category);
         Assert.Equal("Method MethodWithAttributeAsync returned. Result = returnValue", lastWrite.Message);
         Assert.Null(lastWrite.Exception);
-        Assert.Null(lastWrite.Scope);
-        var afterWriteState = (IReadOnlyList<KeyValuePair<string, object>>)lastWrite.State;
+        Assert.Empty(firstWrite.Scopes);
         KeyValuePair<string, object>[] expectedAfterWriteState = new[]
         {
             new KeyValuePair<string, object>("result", expectedReturnValue),
             new KeyValuePair<string, object>("{OriginalFormat}", "Method MethodWithAttributeAsync returned. Result = {result}")
         };
-        LogValuesAssert.Contains(expectedAfterWriteState, afterWriteState);
+        Assert.Equivalent(expectedAfterWriteState, lastWrite.StructuredState, strict: true);
     }
 }
