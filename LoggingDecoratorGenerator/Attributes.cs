@@ -6,6 +6,7 @@ internal static class Attributes
 
     public const string DecorateWithLoggerName = "DecorateWithLoggerAttribute";
     public const string DecorateWithLoggerFullName = $"{Namespace}.{DecorateWithLoggerName}";
+    public const string ReportDurationAsMetricName = "ReportDurationAsMetric";
     public const string DecorateWithLogger = $$"""
         #nullable enable
         namespace {{Namespace}}
@@ -14,6 +15,8 @@ internal static class Attributes
             internal sealed class {{DecorateWithLoggerName}} : System.Attribute
             {
                 public Microsoft.Extensions.Logging.LogLevel Level { get; }
+
+                public bool {{ReportDurationAsMetricName}} { get; set; }
 
                 public {{DecorateWithLoggerName}}(Microsoft.Extensions.Logging.LogLevel level = Microsoft.Extensions.Logging.LogLevel.Debug)
                 {
