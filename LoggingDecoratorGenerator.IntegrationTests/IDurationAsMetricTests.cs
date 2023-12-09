@@ -25,7 +25,7 @@ public interface IDurationAsMetric
     Task<int> MethodMeasuresDurationAsync(DateTime myDateTimeParam);
 
     [LogMethod(MeasureDuration = false)]
-    Task<int> MethodWithoutDurationAsync(DateTime input);
+    int MethodWithoutDuration(DateTime input);
 }
 
 public sealed class DurationAsMetricTests : IDisposable
@@ -120,5 +120,28 @@ public sealed class DurationAsMetricTests : IDisposable
             new KeyValuePair<string, object?>("logging_decorator.method", nameof(IDurationAsMetric.MethodMeasuresDurationAsync)));
         Assert.True(tagsMatch);
         Assert.True(singleMeasurement.Timestamp > firstWrite.Timestamp && singleMeasurement.Timestamp < lastWrite.Timestamp);
+    }
+
+    [Fact]
+    public void WhenMetricCollectionEnabled_MethodWithoutDuration_NoMetricIsReported()
+    {
+        // Arrange
+        DateTime input = DateTime.UtcNow;
+        int expectedReturnValue = Random.Shared.Next();
+        A.CallTo(() => _fakeService.MethodWithoutDuration(input)).Returns(expectedReturnValue);
+
+        // Act
+        int actualReturnValue = _decorator.MethodWithoutDuration(input);
+
+        // Assert
+        Assert.Equal(expectedReturnValue, actualReturnValue);
+        A.CallTo(() => _fakeService.MethodWithoutDuration(input)).MustHaveHappenedOnceExactly();
+
+        Assert.Equal(2, _logCollector.Count);
+        Histogram<double> histogram = Assert.IsType<Histogram<double>>(_metricCollector.Instrument);
+        Assert.Equal(typeof(IDurationAsMetric).ToString(), histogram.Meter.Name);
+        Assert.Equal("logging_decorator.method.duration", histogram.Name);
+        Assert.True(histogram.Enabled);
+        Assert.Empty(_metricCollector.GetMeasurementSnapshot());
     }
 }
