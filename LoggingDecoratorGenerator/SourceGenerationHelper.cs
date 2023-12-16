@@ -33,8 +33,7 @@ internal static class SourceGenerationHelper
         writer.WriteLine($"private readonly {interfaceName} _decorated;");
         if (decoratorClass.NeedsDurationAsMetric)
         {
-            writer.WriteLine("private readonly global::System.Diagnostics.Metrics.Histogram<global::System.Double> _methodDuration;");
-            writer.WriteLine("private readonly global::System.String _typeName;");
+            writer.WriteLine("private readonly global::System.Diagnostics.Metrics.Histogram<double> _methodDuration;");
         }
         writer.WriteLineNoTabs(null);
 
@@ -72,13 +71,13 @@ internal static class SourceGenerationHelper
 
     private static void AppendGetElapsedTimeSection(IndentedTextWriter writer)
     {
-        writer.WriteLine("private static readonly global::System.Double s_timestampToTicks = global::System.TimeSpan.TicksPerSecond / (global::System.Double)global::System.Diagnostics.Stopwatch.Frequency;");
+        writer.WriteLine("private static readonly double s_timestampToTicks = global::System.TimeSpan.TicksPerSecond / (double)global::System.Diagnostics.Stopwatch.Frequency;");
         writer.WriteLineNoTabs(null);
-        writer.WriteLine("private static global::System.TimeSpan __GetElapsedTime__(global::System.Int64 startTimestamp)");
+        writer.WriteLine("private static global::System.TimeSpan __GetElapsedTime__(long startTimestamp)");
         writer.StartBlock();
         writer.WriteLine("var end = global::System.Diagnostics.Stopwatch.GetTimestamp();");
         writer.WriteLine("var timestampDelta = end - startTimestamp;");
-        writer.WriteLine("var ticks = (global::System.Int64)(s_timestampToTicks * timestampDelta);");
+        writer.WriteLine("var ticks = (long)(s_timestampToTicks * timestampDelta);");
         writer.WriteLine("return new global::System.TimeSpan(ticks);");
         writer.EndBlock();
     }
@@ -103,8 +102,15 @@ internal static class SourceGenerationHelper
         {
             writer.WriteLine($"var meterOptions = new global::System.Diagnostics.Metrics.MeterOptions(name: typeof({decClass.InterfaceName}).ToString());");
             writer.WriteLine("var meter = meterFactory.Create(meterOptions);");
-            writer.WriteLine("_methodDuration = meter.CreateHistogram<global::System.Double>(name: \"logging_decorator.method.duration\", unit: \"s\", description: \"The duration of method invocations.\");");
-            writer.WriteLine("_typeName = decorated.GetType().ToString();");
+            writer.WriteLine("var tags = new global::System.Diagnostics.TagList();");
+            writer.WriteLine("tags.Add(key: \"logging_decorator.type\", value: decorated.GetType().ToString());");
+            writer.WriteLine("_methodDuration = meter.CreateHistogram<double>(");
+            writer.Indent++;
+            writer.WriteLine("name: \"logging_decorator.method.duration\",");
+            writer.WriteLine("unit: \"s\",");
+            writer.WriteLine("description: \"The duration of method invocations.\",");
+            writer.WriteLine("tags);");
+            writer.Indent--;
         }
         writer.EndBlock();
     }
@@ -279,8 +285,7 @@ internal static class SourceGenerationHelper
             AppendGetElapsedTime(writer, stopwatchGetElapsedTimeAvailable);
             writer.WriteLine($"_methodDuration.Record({ElapsedTimeVar}.TotalSeconds,");
             writer.Indent++;
-            writer.WriteLine($"new global::System.Collections.Generic.KeyValuePair<global::System.String, global::System.Object?>(\"logging_decorator.type\", _typeName),");
-            writer.WriteLine($"new global::System.Collections.Generic.KeyValuePair<global::System.String, global::System.Object?>(\"logging_decorator.method\", nameof({methodToGenerate.MethodSymbol.Name})));");
+            writer.WriteLine($"new global::System.Collections.Generic.KeyValuePair<string, object?>(\"logging_decorator.method\", nameof({methodToGenerate.MethodSymbol.Name})));");
             writer.Indent--;
             writer.EndBlock();
         }

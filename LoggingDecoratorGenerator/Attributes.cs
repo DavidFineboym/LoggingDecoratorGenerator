@@ -16,6 +16,14 @@ internal static class Attributes
             {
                 public Microsoft.Extensions.Logging.LogLevel Level { get; }
 
+                /// <summary>
+                /// If a method measures duration and this is set to <see langword="true"/>, then the decorator will report the durations of method invocations as a metric using the System.Diagnostics.Metrics APIs.
+                /// If <see langword="true"/>, the durations won't be reported in log messages and decorator class will require <see cref="global::System.Diagnostics.Metrics.IMeterFactory"/> in its constructor.
+                /// It's available by targeting .NET 6+, or in older .NET Core and .NET Framework apps by adding a reference to the .NET System.Diagnostics.DiagnosticsSource 6.0+ NuGet package.
+                /// For more info, see <see href="https://learn.microsoft.com/en-us/aspnet/core/log-mon/metrics/metrics">ASP.NET Core metrics</see>,
+                /// <see href="https://learn.microsoft.com/en-us/dotnet/core/diagnostics/observability-with-otel">.NET observability with OpenTelemetry</see>,
+                /// <see href="https://learn.microsoft.com/en-us/dotnet/core/diagnostics/metrics-collection">Collect metrics</see>.
+                /// </summary>
                 public bool {{ReportDurationAsMetricName}} { get; set; }
 
                 public {{DecorateWithLoggerName}}(Microsoft.Extensions.Logging.LogLevel level = Microsoft.Extensions.Logging.LogLevel.Debug)

@@ -10,16 +10,14 @@ using System.Globalization;
 namespace LoggingDecoratorGenerator.IntegrationTests;
 
 // TODO: Allow to specify MeasureDuration in DecorateWithLogger.
-// TODO: Add XML documentation for properties. Copy some from https://learn.microsoft.com/en-us/dotnet/core/diagnostics/compare-metric-apis
+// TODO: Add new lines in generated code for readability.
 // TODO: Edit readme.md and NuGet readme to include new features.
-// TODO: Add two good tests for 2 methods below.
 // TODO: Test with dotnet-counters before publishing.
 // TODO: In next PR, merge interface files with test files.
 [DecorateWithLogger(ReportDurationAsMetric = true)]
 public interface IDurationAsMetric
 {
     // TODO: Don't specify MeasureDuration here and make true in DecorateWithLogger.
-    // TODO: Add test when no collector is listening, i.e. verify that no metrics are reported. Make sure logging is enabled.
     // TODO: Test metrics when two different implementations of the same interface are decorated.
     [LogMethod(MeasureDuration = true, Level = LogLevel.Information, EventId = 10, EventName = "MyName")]
     Task<int> MethodMeasuresDurationAsync(DateTime myDateTimeParam);
@@ -55,8 +53,6 @@ public sealed class DurationAsMetricTests : IDisposable
         _fakeService = A.Fake<IDurationAsMetric>();
         _decorator = new DurationAsMetricLoggingDecorator(logger, _fakeService, _meterFactory);
     }
-
-    // TODO: Add new lines in generated code for readability.
 
     public void Dispose() => _serviceProvider.Dispose();
 
@@ -112,11 +108,17 @@ public sealed class DurationAsMetricTests : IDisposable
         Histogram<double> histogram = Assert.IsType<Histogram<double>>(_metricCollector.Instrument);
         Assert.Equal("s", histogram.Unit);
         Assert.Equal("The duration of method invocations.", histogram.Description);
+        Assert.NotNull(histogram.Tags);
+        KeyValuePair<string, object?> histogramTag = Assert.Single(histogram.Tags);
+        Assert.Equal(new KeyValuePair<string, object?>("logging_decorator.type", _fakeService.GetType().ToString()), histogramTag);
+
+        Assert.Null(histogram.Meter.Tags);
+        Assert.Null(histogram.Meter.Version);
+
         IReadOnlyList<CollectedMeasurement<double>> collectedMeasurements = _metricCollector.GetMeasurementSnapshot();
         CollectedMeasurement<double> singleMeasurement = Assert.Single(collectedMeasurements);
         Assert.InRange(singleMeasurement.Value, double.Epsilon, (lastWrite.Timestamp - firstWrite.Timestamp).TotalSeconds);
         bool tagsMatch = singleMeasurement.MatchesTags(
-            new KeyValuePair<string, object?>("logging_decorator.type", _fakeService.GetType().ToString()),
             new KeyValuePair<string, object?>("logging_decorator.method", nameof(IDurationAsMetric.MethodMeasuresDurationAsync)));
         Assert.True(tagsMatch);
         Assert.True(singleMeasurement.Timestamp > firstWrite.Timestamp && singleMeasurement.Timestamp < lastWrite.Timestamp);
