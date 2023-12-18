@@ -9,17 +9,13 @@ using System.Globalization;
 
 namespace LoggingDecoratorGenerator.IntegrationTests;
 
-// TODO: Allow to specify MeasureDuration in DecorateWithLogger.
-// TODO: Add new lines in generated code for readability.
 // TODO: Edit readme.md and NuGet readme to include new features.
 // TODO: Test with dotnet-counters before publishing.
 // TODO: In next PR, merge interface files with test files.
-[DecorateWithLogger(ReportDurationAsMetric = true)]
+[DecorateWithLogger(MeasureDuration = true, ReportDurationAsMetric = true)]
 public interface IDurationAsMetric
 {
-    // TODO: Don't specify MeasureDuration here and make true in DecorateWithLogger.
-    // TODO: Test metrics when two different implementations of the same interface are decorated.
-    [LogMethod(MeasureDuration = true, Level = LogLevel.Information, EventId = 10, EventName = "MyName")]
+    [LogMethod(Level = LogLevel.Information, EventId = 10, EventName = "MyName")]
     Task<int> MethodMeasuresDurationAsync(DateTime myDateTimeParam);
 
     [LogMethod(MeasureDuration = false)]
@@ -32,6 +28,7 @@ public sealed class DurationAsMetricTests : IDisposable
     private readonly IMeterFactory _meterFactory;
     private readonly MetricCollector<double> _metricCollector;
 
+    private readonly FakeLogger<IDurationAsMetric> _logger;
     private readonly FakeLogCollector _logCollector;
     private readonly IDurationAsMetric _fakeService;
     private readonly DurationAsMetricLoggingDecorator _decorator;
@@ -49,9 +46,9 @@ public sealed class DurationAsMetricTests : IDisposable
             instrumentName: "logging_decorator.method.duration");
 
         _logCollector = new();
-        FakeLogger<IDurationAsMetric> logger = new(_logCollector);
+        _logger = new(_logCollector);
         _fakeService = A.Fake<IDurationAsMetric>();
-        _decorator = new DurationAsMetricLoggingDecorator(logger, _fakeService, _meterFactory);
+        _decorator = new DurationAsMetricLoggingDecorator(_logger, _fakeService, _meterFactory);
     }
 
     public void Dispose() => _serviceProvider.Dispose();
@@ -145,5 +142,87 @@ public sealed class DurationAsMetricTests : IDisposable
         Assert.Equal("logging_decorator.method.duration", histogram.Name);
         Assert.True(histogram.Enabled);
         Assert.Empty(_metricCollector.GetMeasurementSnapshot());
+    }
+
+    [Fact]
+    public async Task WhenTwoImplementationsOfSameInterface_ReportToSameMeter_DifferentInstruments()
+    {
+        // Arrange
+        MetricCollector<double>? firstCollector = null, secondCollector = null;
+        using MeterListener meterListener = new();
+        meterListener.InstrumentPublished = (instrument, listener) =>
+        {
+            Assert.Equal(typeof(IDurationAsMetric).ToString(), instrument.Meter.Name);
+            Assert.Null(instrument.Meter.Tags);
+            Assert.Null(instrument.Meter.Version);
+
+            Histogram<double> histogram = Assert.IsType<Histogram<double>>(instrument);
+            Assert.Equal("s", histogram.Unit);
+            Assert.Equal("The duration of method invocations.", histogram.Description);
+            Assert.NotNull(histogram.Tags);
+            KeyValuePair<string, object?> histogramTag = Assert.Single(histogram.Tags);
+            Assert.Equal("logging_decorator.type", histogramTag.Key);
+            string tagValue = Assert.IsType<string>(histogramTag.Value);
+
+            if (tagValue == typeof(FirstImplementation).ToString())
+            {
+                firstCollector = new MetricCollector<double>(histogram);
+            }
+            else if (tagValue == typeof(SecondImplementation).ToString())
+            {
+                secondCollector = new MetricCollector<double>(histogram);
+            }
+        };
+
+        meterListener.Start();
+
+        var decorator1 = new DurationAsMetricLoggingDecorator(_logger, new FirstImplementation(), _meterFactory);
+        var decorator2 = new DurationAsMetricLoggingDecorator(_logger, new SecondImplementation(), _meterFactory);
+
+        // Act
+        await decorator1.MethodMeasuresDurationAsync(DateTime.UtcNow);
+        await decorator2.MethodMeasuresDurationAsync(DateTime.UtcNow);
+
+        // Assert
+        Assert.NotNull(firstCollector?.Instrument);
+        Assert.NotNull(secondCollector?.Instrument);
+
+        Assert.Same(firstCollector.Instrument.Meter, secondCollector.Instrument.Meter);
+        Assert.NotSame(firstCollector.Instrument, secondCollector.Instrument);
+
+        CollectedMeasurement<double> firstImplementationMeasurement = Assert.Single(firstCollector.GetMeasurementSnapshot());
+        CollectedMeasurement<double> secondImplementationMeasurement = Assert.Single(secondCollector.GetMeasurementSnapshot());
+
+        KeyValuePair<string, object?> firstImplementationTag = Assert.Single(firstImplementationMeasurement.Tags);
+        KeyValuePair<string, object?> secondImplementationTag = Assert.Single(secondImplementationMeasurement.Tags);
+
+        Assert.Equal(new KeyValuePair<string, object?>("logging_decorator.method", nameof(IDurationAsMetric.MethodMeasuresDurationAsync)), firstImplementationTag);
+        Assert.Equal(firstImplementationTag, secondImplementationTag);
+    }
+
+    private class FirstImplementation : IDurationAsMetric
+    {
+        public Task<int> MethodMeasuresDurationAsync(DateTime myDateTimeParam)
+        {
+            return Task.FromResult(1);
+        }
+
+        public int MethodWithoutDuration(DateTime input)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    private class SecondImplementation : IDurationAsMetric
+    {
+        public Task<int> MethodMeasuresDurationAsync(DateTime myDateTimeParam)
+        {
+            return Task.FromResult(2);
+        }
+
+        public int MethodWithoutDuration(DateTime input)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

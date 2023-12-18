@@ -188,9 +188,12 @@ internal static class SourceGenerationHelper
             writer.WriteLine("__e,");
             writer.WriteLine($"\"{method.Name} failed\");");
             writer.Indent--;
+            writer.WriteLineNoTabs(null);
             writer.WriteLine("throw;");
             writer.EndBlock();
         }
+
+        writer.WriteLineNoTabs(null);
 
         AppendAfterMethodSection(writer, loggerDelegateAfterVariable, methodToGenerate, stopwatchGetElapsedTimeAvailable, durationAsMetric);
 
@@ -244,6 +247,8 @@ internal static class SourceGenerationHelper
             writer.WriteLine("global::System.Int64 __startTimestamp = 0;");
         }
 
+        writer.WriteLineNoTabs(null);
+
         writer.WriteLine($"if ({LogEnabledBoolVar})");
         writer.StartBlock();
 
@@ -262,12 +267,16 @@ internal static class SourceGenerationHelper
 
         writer.EndBlock();
 
+        writer.WriteLineNoTabs(null);
+
         if (method.MeasureDuration && durationAsMetric)
         {
             writer.WriteLine($"if ({DurationMetricEnabledBoolVar})");
             writer.StartBlock();
             writer.WriteLine(startTimestampInit);
             writer.EndBlock();
+
+            writer.WriteLineNoTabs(null);
         }
     }
 
@@ -288,6 +297,8 @@ internal static class SourceGenerationHelper
             writer.WriteLine($"new global::System.Collections.Generic.KeyValuePair<string, object?>(\"logging_decorator.method\", nameof({methodToGenerate.MethodSymbol.Name})));");
             writer.Indent--;
             writer.EndBlock();
+
+            writer.WriteLineNoTabs(null);
         }
 
         writer.WriteLine($"if ({LogEnabledBoolVar})");
@@ -315,6 +326,7 @@ internal static class SourceGenerationHelper
 
         if (methodToGenerate.HasReturnValue)
         {
+            writer.WriteLineNoTabs(null);
             writer.WriteLine("return __result;");
         }
     }
