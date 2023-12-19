@@ -34,7 +34,7 @@ namespace SomeFolder.SomeSubFolder
         public void VoidParameterlessMethod()
         {
             var __logEnabled = _logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Trace);
-            global::System.Int64 __startTimestamp = 0;
+            long __startTimestamp = 0;
 
             if (__logEnabled)
             {

@@ -244,7 +244,7 @@ internal static class SourceGenerationHelper
             {
                 writer.WriteLine($"var {DurationMetricEnabledBoolVar} = _methodDuration.Enabled;");
             }
-            writer.WriteLine("global::System.Int64 __startTimestamp = 0;");
+            writer.WriteLine("long __startTimestamp = 0;");
         }
 
         writer.WriteLineNoTabs(null);

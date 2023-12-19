@@ -120,7 +120,7 @@ namespace SomeFolder.SomeSubFolder
         public async global::System.Threading.Tasks.Task<double?> SomeAsyncMethod(string? s)
         {
             var __logEnabled = _logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Information);
-            global::System.Int64 __startTimestamp = 0;
+            long __startTimestamp = 0;
 
             if (__logEnabled)
             {
@@ -228,8 +228,7 @@ namespace SomeFolder.SomeSubFolder
 
 #### Duration as metric
 Reporting duration of methods as a metric has an advantage of being separated from logs, so you can enable one without the other.
-For example, metrics can be collected ad-hoc by [dotnet-counters](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/metrics-collection#view-metrics-with-dotnet-counters) tool or Prometheus.
-It also has built-in statistical aggregation like percentiles.<br>
+For example, metrics can be collected ad-hoc by [dotnet-counters](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/metrics-collection#view-metrics-with-dotnet-counters) tool or Prometheus.<br>
 Only if `ReportDurationAsMetric` is `true`, then [IMeterFactory](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.imeterfactory) is required in the decorator class constructor.
 For the example above, name of the meter will be `typeof(ISomeService).ToString()`.
 Name of the instrument is always `"logging_decorator.method.duration"` and type is [Histogram](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.histogram-1).<br>
