@@ -21,7 +21,8 @@ namespace Fineboym.Logging.Attributes
         public string? EventName { get; set; }
 
         /// <summary>
-        /// Surrounds the method call by <see cref="System.Diagnostics.Stopwatch"/> and logs duration in milliseconds. Default is false.
+        /// Surrounds the method call by <see cref="System.Diagnostics.Stopwatch"/>, default is <see langword="false"/>.
+        /// If <see cref="DecorateWithLoggerAttribute.ReportDurationAsMetric"/> is <see langword="false"/>, then duration in milliseconds is included in the log message about method's return, otherwise separately as a metric in seconds.
         /// </summary>
         public bool MeasureDuration { get; set; }
 
