@@ -53,8 +53,8 @@ You can see the generated code example for above interface on [GitHub README](ht
 Reporting duration of methods as a metric has an advantage of being separated from logs, so you can enable one without the other.
 For example, metrics can be collected ad-hoc by [dotnet-counters](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/metrics-collection#view-metrics-with-dotnet-counters) tool or Prometheus.<br>
 Only if `ReportDurationAsMetric` is `true`, then [IMeterFactory](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.imeterfactory) is required in the decorator class constructor.
-For the example above, name of the meter will be `typeof(ISomeService).ToString()`.
-Name of the instrument is always `"logging_decorator.method.duration"` and type is [Histogram](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.histogram-1).<br>
+For the example above, name of the meter will be `decorated.GetType().ToString()` where `ISomeService decorated` is constructor parameter to `SomeServiceLoggingDecorator`.
+Name of the instrument is always `"logging_decorator.method.duration"` and type is [Histogram\<double\>](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.histogram-1).<br>
 For more info, see [ASP.NET Core metrics](https://learn.microsoft.com/en-us/aspnet/core/log-mon/metrics/metrics), [.NET observability with OpenTelemetry](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/observability-with-otel).
 
 ## Additional documentation

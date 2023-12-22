@@ -9,9 +9,6 @@ using System.Globalization;
 
 namespace LoggingDecoratorGenerator.IntegrationTests;
 
-// TODO: Edit readme.md and NuGet readme to include new features.
-// TODO: Test with dotnet-counters before publishing.
-// TODO: In next PR, merge interface files with test files.
 [DecorateWithLogger(MeasureDuration = true, ReportDurationAsMetric = true)]
 public interface IDurationAsMetric
 {
@@ -40,15 +37,15 @@ public sealed class DurationAsMetricTests : IDisposable
         _serviceProvider = serviceCollection.BuildServiceProvider();
         _meterFactory = _serviceProvider.GetRequiredService<IMeterFactory>();
 
-        _metricCollector = new MetricCollector<double>(
-            meterScope: _meterFactory,
-            meterName: typeof(IDurationAsMetric).ToString(),
-            instrumentName: "logging_decorator.method.duration");
-
         _logCollector = new();
         _logger = new(_logCollector);
         _fakeService = A.Fake<IDurationAsMetric>();
         _decorator = new DurationAsMetricLoggingDecorator(_logger, _fakeService, _meterFactory);
+
+        _metricCollector = new MetricCollector<double>(
+            meterScope: _meterFactory,
+            meterName: _fakeService.GetType().ToString(),
+            instrumentName: "logging_decorator.method.duration");
     }
 
     public void Dispose() => _serviceProvider.Dispose();
@@ -105,10 +102,7 @@ public sealed class DurationAsMetricTests : IDisposable
         Histogram<double> histogram = Assert.IsType<Histogram<double>>(_metricCollector.Instrument);
         Assert.Equal("s", histogram.Unit);
         Assert.Equal("The duration of method invocations.", histogram.Description);
-        Assert.NotNull(histogram.Tags);
-        KeyValuePair<string, object?> histogramTag = Assert.Single(histogram.Tags);
-        Assert.Equal(new KeyValuePair<string, object?>("logging_decorator.type", _fakeService.GetType().ToString()), histogramTag);
-
+        Assert.Null(histogram.Tags);
         Assert.Null(histogram.Meter.Tags);
         Assert.Null(histogram.Meter.Version);
 
@@ -138,37 +132,33 @@ public sealed class DurationAsMetricTests : IDisposable
 
         Assert.Equal(2, _logCollector.Count);
         Histogram<double> histogram = Assert.IsType<Histogram<double>>(_metricCollector.Instrument);
-        Assert.Equal(typeof(IDurationAsMetric).ToString(), histogram.Meter.Name);
+        Assert.Equal(_fakeService.GetType().ToString(), histogram.Meter.Name);
         Assert.Equal("logging_decorator.method.duration", histogram.Name);
         Assert.True(histogram.Enabled);
         Assert.Empty(_metricCollector.GetMeasurementSnapshot());
     }
 
     [Fact]
-    public async Task WhenTwoImplementationsOfSameInterface_ReportToSameMeter_DifferentInstruments()
+    public async Task WhenTwoImplementationsOfSameInterface_ReportToDifferentMeters_DifferentInstruments()
     {
         // Arrange
         MetricCollector<double>? firstCollector = null, secondCollector = null;
         using MeterListener meterListener = new();
         meterListener.InstrumentPublished = (instrument, listener) =>
         {
-            Assert.Equal(typeof(IDurationAsMetric).ToString(), instrument.Meter.Name);
             Assert.Null(instrument.Meter.Tags);
             Assert.Null(instrument.Meter.Version);
 
             Histogram<double> histogram = Assert.IsType<Histogram<double>>(instrument);
             Assert.Equal("s", histogram.Unit);
             Assert.Equal("The duration of method invocations.", histogram.Description);
-            Assert.NotNull(histogram.Tags);
-            KeyValuePair<string, object?> histogramTag = Assert.Single(histogram.Tags);
-            Assert.Equal("logging_decorator.type", histogramTag.Key);
-            string tagValue = Assert.IsType<string>(histogramTag.Value);
+            Assert.Null(histogram.Tags);
 
-            if (tagValue == typeof(FirstImplementation).ToString())
+            if (instrument.Meter.Name == typeof(FirstImplementation).ToString())
             {
                 firstCollector = new MetricCollector<double>(histogram);
             }
-            else if (tagValue == typeof(SecondImplementation).ToString())
+            else if (instrument.Meter.Name == typeof(SecondImplementation).ToString())
             {
                 secondCollector = new MetricCollector<double>(histogram);
             }
@@ -187,7 +177,7 @@ public sealed class DurationAsMetricTests : IDisposable
         Assert.NotNull(firstCollector?.Instrument);
         Assert.NotNull(secondCollector?.Instrument);
 
-        Assert.Same(firstCollector.Instrument.Meter, secondCollector.Instrument.Meter);
+        Assert.NotSame(firstCollector.Instrument.Meter, secondCollector.Instrument.Meter);
         Assert.NotSame(firstCollector.Instrument, secondCollector.Instrument);
 
         CollectedMeasurement<double> firstImplementationMeasurement = Assert.Single(firstCollector.GetMeasurementSnapshot());

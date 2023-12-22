@@ -100,17 +100,9 @@ internal static class SourceGenerationHelper
         writer.WriteLine("_decorated = decorated;");
         if (decClass.NeedsDurationAsMetric)
         {
-            writer.WriteLine($"var meterOptions = new global::System.Diagnostics.Metrics.MeterOptions(name: typeof({decClass.InterfaceName}).ToString());");
+            writer.WriteLine("var meterOptions = new global::System.Diagnostics.Metrics.MeterOptions(name: decorated.GetType().ToString());");
             writer.WriteLine("var meter = meterFactory.Create(meterOptions);");
-            writer.WriteLine("var tags = new global::System.Diagnostics.TagList();");
-            writer.WriteLine("tags.Add(key: \"logging_decorator.type\", value: decorated.GetType().ToString());");
-            writer.WriteLine("_methodDuration = meter.CreateHistogram<double>(");
-            writer.Indent++;
-            writer.WriteLine("name: \"logging_decorator.method.duration\",");
-            writer.WriteLine("unit: \"s\",");
-            writer.WriteLine("description: \"The duration of method invocations.\",");
-            writer.WriteLine("tags);");
-            writer.Indent--;
+            writer.WriteLine("_methodDuration = meter.CreateHistogram<double>(name: \"logging_decorator.method.duration\", unit: \"s\", description: \"The duration of method invocations.\");");
         }
         writer.EndBlock();
     }
