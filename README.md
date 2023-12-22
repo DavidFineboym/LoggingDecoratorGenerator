@@ -6,7 +6,7 @@ Generates logger decorator class for an interface at compile time(*no runtime re
 - Supports async methods
 - Supports log level, event id, and event name override through attribute
 - Can catch and log specific exceptions
-- Can measure method duration for performance reporting
+- Can measure method duration for performance reporting either as metric or log message
 - Follows [High-performance logging in .NET](https://learn.microsoft.com/en-us/dotnet/core/extensions/high-performance-logging) guidance
 
 ## Getting started
@@ -28,7 +28,7 @@ using Microsoft.Extensions.Logging;
 namespace SomeFolder.SomeSubFolder;
 
 // Default log level is Debug, applied to all methods. Can be changed through attribute's constructor.
-[DecorateWithLogger]
+[DecorateWithLogger(ReportDurationAsMetric = false)]
 public interface ISomeService
 {
     int SomeMethod(DateTime someDateTime);
@@ -56,13 +56,15 @@ This will create a generated class named `SomeServiceLoggingDecorator` in the sa
 
 namespace SomeFolder.SomeSubFolder
 {
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Fineboym.Logging.Generator", "1.9.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Fineboym.Logging.Generator", "1.10.0.0")]
     public sealed class SomeServiceLoggingDecorator : ISomeService
     {
         private readonly global::Microsoft.Extensions.Logging.ILogger<ISomeService> _logger;
         private readonly ISomeService _decorated;
 
-        public SomeServiceLoggingDecorator(global::Microsoft.Extensions.Logging.ILogger<ISomeService> logger, ISomeService decorated)
+        public SomeServiceLoggingDecorator(
+            global::Microsoft.Extensions.Logging.ILogger<ISomeService> logger,
+            ISomeService decorated)
         {
             _logger = logger;
             _decorated = decorated;
@@ -85,15 +87,19 @@ namespace SomeFolder.SomeSubFolder
         public int SomeMethod(global::System.DateTime someDateTime)
         {
             var __logEnabled = _logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug);
+
             if (__logEnabled)
             {
                 s_beforeSomeMethod(_logger, someDateTime, null);
             }
+
             var __result = _decorated.SomeMethod(someDateTime);
+
             if (__logEnabled)
             {
                 s_afterSomeMethod(_logger, __result, null);
             }
+
             return __result;
         }
 
@@ -114,18 +120,22 @@ namespace SomeFolder.SomeSubFolder
         public async global::System.Threading.Tasks.Task<double?> SomeAsyncMethod(string? s)
         {
             var __logEnabled = _logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Information);
-            global::System.Int64 __startTimestamp = 0;
+            long __startTimestamp = 0;
+
             if (__logEnabled)
             {
                 s_beforeSomeAsyncMethod(_logger, s, null);
                 __startTimestamp = global::System.Diagnostics.Stopwatch.GetTimestamp();
             }
+
             var __result = await _decorated.SomeAsyncMethod(s).ConfigureAwait(false);
+
             if (__logEnabled)
             {
                 var __elapsedTime = global::System.Diagnostics.Stopwatch.GetElapsedTime(__startTimestamp);
                 s_afterSomeAsyncMethod(_logger, __result, __elapsedTime.TotalMilliseconds, null);
             }
+
             return __result;
         }
 
@@ -146,10 +156,12 @@ namespace SomeFolder.SomeSubFolder
         public async global::System.Threading.Tasks.Task<string> AnotherAsyncMethod(int x)
         {
             var __logEnabled = _logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug);
+
             if (__logEnabled)
             {
                 s_beforeAnotherAsyncMethod(_logger, x, null);
             }
+
             string __result;
             try
             {
@@ -163,12 +175,15 @@ namespace SomeFolder.SomeSubFolder
                     new global::Microsoft.Extensions.Logging.EventId(2017861863, nameof(AnotherAsyncMethod)),
                     __e,
                     "AnotherAsyncMethod failed");
+
                 throw;
             }
+
             if (__logEnabled)
             {
                 s_afterAnotherAsyncMethod(_logger, __result, null);
             }
+
             return __result;
         }
 
@@ -189,15 +204,19 @@ namespace SomeFolder.SomeSubFolder
         public string GetMySecretString(string username, string password)
         {
             var __logEnabled = _logger.IsEnabled(global::Microsoft.Extensions.Logging.LogLevel.Debug);
+
             if (__logEnabled)
             {
                 s_beforeGetMySecretString(_logger, username, null);
             }
+
             var __result = _decorated.GetMySecretString(username, password);
+
             if (__logEnabled)
             {
                 s_afterGetMySecretString(_logger, null);
             }
+
             return __result;
         }
     }
@@ -207,10 +226,18 @@ namespace SomeFolder.SomeSubFolder
 
 </details>
 
+#### Duration as metric
+Reporting duration of methods as a metric has an advantage of being separated from logs, so you can enable one without the other.
+For example, metrics can be collected ad-hoc by [dotnet-counters](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/metrics-collection#view-metrics-with-dotnet-counters) tool or Prometheus.<br>
+Only if `ReportDurationAsMetric` is `true`, then [IMeterFactory](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.imeterfactory) is required in the decorator class constructor.
+For the example above, name of the meter will be `decorated.GetType().ToString()` where `ISomeService decorated` is constructor parameter to `SomeServiceLoggingDecorator`.
+Name of the instrument is always `"logging_decorator.method.duration"` and type is [Histogram\<double\>](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.histogram-1).<br>
+For more info, see [ASP.NET Core metrics](https://learn.microsoft.com/en-us/aspnet/core/log-mon/metrics/metrics), [.NET observability with OpenTelemetry](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/observability-with-otel).
+
 ## Additional documentation
 
 If you use .NET dependency injection, then you can decorate your service interface. You can do it yourself or use [Scrutor](https://github.com/khellang/Scrutor).
-Here is an explanation [Adding decorated classes to the ASP.NET Core DI container using Scrutor](https://andrewlock.net/adding-decorated-classes-to-the-asp.net-core-di-container-using-scrutor).
+Here is an explanation [Adding decorated classes to the ASP.NET Core DI container using Scrutor](https://andrewlock.net/adding-decorated-classes-to-the-asp.net-core-di-container-using-scrutor).<br>
 If you're not familiar with Source Generators, read [Source Generators](https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview).
 
 ## Limitations

@@ -35,6 +35,7 @@ internal class MethodToGenerate
     public MethodToGenerate(
         IMethodSymbol methodSymbol,
         string? interfaceLogLevel,
+        bool interfaceMeasureDuration,
         INamedTypeSymbol methodMarkerAttribute,
         INamedTypeSymbol notLoggedAttribute)
     {
@@ -42,6 +43,7 @@ internal class MethodToGenerate
         UniqueName = methodSymbol.Name; // assume no overloads at first
         CheckReturnType(methodSymbol.ReturnType);
         LogLevel = interfaceLogLevel;
+        MeasureDuration = interfaceMeasureDuration;
         bool suppliedEventId = false;
         string? suppliedEventName = null;
 
