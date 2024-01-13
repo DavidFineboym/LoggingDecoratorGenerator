@@ -3,17 +3,17 @@
 
 namespace SomeFolder.SomeSubFolder
 {
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Fineboym.Logging.Generator", "1.10.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Fineboym.Logging.Generator", "2.0.0.0")]
     public sealed class SomeServiceLoggingDecorator : ISomeService
     {
-        private readonly global::Microsoft.Extensions.Logging.ILogger<ISomeService> _logger;
+        private readonly global::Microsoft.Extensions.Logging.ILogger _logger;
         private readonly ISomeService _decorated;
 
         public SomeServiceLoggingDecorator(
-            global::Microsoft.Extensions.Logging.ILogger<ISomeService> logger,
+            global::Microsoft.Extensions.Logging.ILoggerFactory loggerFactory,
             ISomeService decorated)
         {
-            _logger = logger;
+            _logger = global::Microsoft.Extensions.Logging.LoggerFactoryExtensions.CreateLogger(loggerFactory, decorated.GetType());
             _decorated = decorated;
         }
 

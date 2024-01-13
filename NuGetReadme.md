@@ -1,7 +1,7 @@
 ﻿![image](https://github.com/DavidFineboym/LoggingDecoratorGenerator/actions/workflows/dotnet.yml/badge.svg?event=push)
 # Logging Decorator Source Generator
 
-Generates logger decorator class for an interface at compile time(*no runtime reflection*). Uses `Microsoft.Extensions.Logging.ILogger` to log and requires it in decorator class constructor.
+Generates logger decorator class for an interface at compile time(*no runtime reflection*). Uses `Microsoft.Extensions.Logging.ILogger` to log.
 - Logs method parameters and return value(can omit secrets from log using `[NotLoggedAttribute]`)
 - Supports async methods
 - Supports log level, event id, and event name override through attribute

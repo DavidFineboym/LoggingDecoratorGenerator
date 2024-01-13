@@ -13,9 +13,9 @@ public class PolymorphicInterfacesTests
     public PolymorphicInterfacesTests()
     {
         _collector = new();
-        FakeLogger<IDerivedInterface> logger = new(_collector);
+        LoggerFactory loggerFactory = new(new[] { new FakeLoggerProvider(_collector) });
         _fakeService = A.Fake<IDerivedInterface>();
-        _decorator = new DerivedInterfaceLoggingDecorator(logger, _fakeService);
+        _decorator = new DerivedInterfaceLoggingDecorator(loggerFactory, _fakeService);
     }
 
     [Fact]
@@ -25,8 +25,11 @@ public class PolymorphicInterfacesTests
         const int x = 1;
         const int y = 2;
         const int expectedResult = 3;
-        ILogger<IDerivedInterface> fakeLogger = A.Fake<ILogger<IDerivedInterface>>();
-        var decorator = new DerivedInterfaceLoggingDecorator(fakeLogger, _fakeService);
+        FakeLogger fakeLogger = new();
+        ILoggerProvider fakeProvider = A.Fake<ILoggerProvider>();
+        A.CallTo(() => fakeProvider.CreateLogger(A<string>._)).Returns(fakeLogger);
+        LoggerFactory loggerFactory = new(new[] { fakeProvider });
+        var decorator = new DerivedInterfaceLoggingDecorator(loggerFactory, _fakeService);
         A.CallTo(() => _fakeService.PassThroughMethodAsync(x, y)).Returns(expectedResult);
 
         // Act
@@ -35,7 +38,7 @@ public class PolymorphicInterfacesTests
         // Assert
         Assert.Equal(expectedResult, result);
         A.CallTo(() => _fakeService.PassThroughMethodAsync(x, y)).MustHaveHappenedOnceExactly();
-        A.CallTo(fakeLogger).MustNotHaveHappened();
+        Assert.Empty(fakeLogger.Collector.GetSnapshot());
     }
 
     [Fact]
@@ -62,7 +65,7 @@ public class PolymorphicInterfacesTests
         Assert.Equal(7, firstWrite.Id.Id);
         Assert.Equal("MethodWithAttributeAsync", firstWrite.Id.Name);
         Assert.Equal(LogLevel.Trace, firstWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IDerivedInterface", firstWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), firstWrite.Category);
         Assert.Equal("Entering MethodWithAttributeAsync with parameters: num = 42.3, secret = [REDACTED]", firstWrite.Message);
         Assert.Null(firstWrite.Exception);
         Assert.Empty(firstWrite.Scopes);
@@ -77,7 +80,7 @@ public class PolymorphicInterfacesTests
         Assert.Equal(7, lastWrite.Id.Id);
         Assert.Equal("MethodWithAttributeAsync", lastWrite.Id.Name);
         Assert.Equal(LogLevel.Trace, lastWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IDerivedInterface", lastWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), lastWrite.Category);
         Assert.Equal("Method MethodWithAttributeAsync returned. Result = returnValue", lastWrite.Message);
         Assert.Null(lastWrite.Exception);
         Assert.Empty(firstWrite.Scopes);

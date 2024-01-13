@@ -24,7 +24,7 @@ internal static class SourceGenerationHelper
         writer.StartBlock();
 
         string interfaceName = decoratorClass.InterfaceName;
-        string loggerType = $"global::Microsoft.Extensions.Logging.ILogger<{interfaceName}>";
+        string loggerType = $"global::Microsoft.Extensions.Logging.ILogger";
 
         writer.WriteLine(s_generatedCodeAttribute);
         writer.WriteLine($"{decoratorClass.DeclaredAccessibility} sealed class {decoratorClass.ClassName} : {interfaceName}");
@@ -37,7 +37,7 @@ internal static class SourceGenerationHelper
         }
         writer.WriteLineNoTabs(null);
 
-        AppendConstructor(writer, decoratorClass, loggerType);
+        AppendConstructor(writer, decoratorClass);
 
         foreach (MethodToGenerate methodToGenerate in decoratorClass.Methods)
         {
@@ -82,11 +82,11 @@ internal static class SourceGenerationHelper
         writer.EndBlock();
     }
 
-    private static void AppendConstructor(IndentedTextWriter writer, DecoratorClass decClass, string loggerType)
+    private static void AppendConstructor(IndentedTextWriter writer, DecoratorClass decClass)
     {
         writer.WriteLine($"public {decClass.ClassName}(");
         writer.Indent++;
-        writer.WriteLine($"{loggerType} logger,");
+        writer.WriteLine("global::Microsoft.Extensions.Logging.ILoggerFactory loggerFactory,");
         writer.Write($"{decClass.InterfaceName} decorated");
         if (decClass.NeedsDurationAsMetric)
         {
@@ -96,7 +96,7 @@ internal static class SourceGenerationHelper
         writer.WriteLine(")");
         writer.Indent--;
         writer.StartBlock();
-        writer.WriteLine("_logger = logger;");
+        writer.WriteLine("_logger = global::Microsoft.Extensions.Logging.LoggerFactoryExtensions.CreateLogger(loggerFactory, decorated.GetType());");
         writer.WriteLine("_decorated = decorated;");
         if (decClass.NeedsDurationAsMetric)
         {

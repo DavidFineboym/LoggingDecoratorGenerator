@@ -25,7 +25,7 @@ public sealed class DurationAsMetricTests : IDisposable
     private readonly IMeterFactory _meterFactory;
     private readonly MetricCollector<double> _metricCollector;
 
-    private readonly FakeLogger<IDurationAsMetric> _logger;
+    private readonly ILoggerFactory _loggerFactory;
     private readonly FakeLogCollector _logCollector;
     private readonly IDurationAsMetric _fakeService;
     private readonly DurationAsMetricLoggingDecorator _decorator;
@@ -38,9 +38,9 @@ public sealed class DurationAsMetricTests : IDisposable
         _meterFactory = _serviceProvider.GetRequiredService<IMeterFactory>();
 
         _logCollector = new();
-        _logger = new(_logCollector);
+        _loggerFactory = new LoggerFactory(new[] { new FakeLoggerProvider(_logCollector) });
         _fakeService = A.Fake<IDurationAsMetric>();
-        _decorator = new DurationAsMetricLoggingDecorator(_logger, _fakeService, _meterFactory);
+        _decorator = new DurationAsMetricLoggingDecorator(_loggerFactory, _fakeService, _meterFactory);
 
         _metricCollector = new MetricCollector<double>(
             meterScope: _meterFactory,
@@ -73,7 +73,7 @@ public sealed class DurationAsMetricTests : IDisposable
         Assert.Equal(10, firstWrite.Id.Id);
         Assert.Equal("MyName", firstWrite.Id.Name);
         Assert.Equal(LogLevel.Information, firstWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IDurationAsMetric", firstWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), firstWrite.Category);
         Assert.Equal($"Entering MethodMeasuresDurationAsync with parameters: myDateTimeParam = {input.ToString(DateTimeFormatInfo.InvariantInfo)}", firstWrite.Message);
         Assert.Null(firstWrite.Exception);
         Assert.Empty(firstWrite.Scopes);
@@ -88,7 +88,7 @@ public sealed class DurationAsMetricTests : IDisposable
         Assert.Equal(10, lastWrite.Id.Id);
         Assert.Equal("MyName", lastWrite.Id.Name);
         Assert.Equal(LogLevel.Information, lastWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IDurationAsMetric", lastWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), lastWrite.Category);
         Assert.Equal($"Method MethodMeasuresDurationAsync returned. Result = {expectedReturnValue}", lastWrite.Message);
         Assert.Null(lastWrite.Exception);
         Assert.Empty(lastWrite.Scopes);
@@ -166,8 +166,8 @@ public sealed class DurationAsMetricTests : IDisposable
 
         meterListener.Start();
 
-        var decorator1 = new DurationAsMetricLoggingDecorator(_logger, new FirstImplementation(), _meterFactory);
-        var decorator2 = new DurationAsMetricLoggingDecorator(_logger, new SecondImplementation(), _meterFactory);
+        var decorator1 = new DurationAsMetricLoggingDecorator(_loggerFactory, new FirstImplementation(), _meterFactory);
+        var decorator2 = new DurationAsMetricLoggingDecorator(_loggerFactory, new SecondImplementation(), _meterFactory);
 
         // Act
         await decorator1.MethodMeasuresDurationAsync(DateTime.UtcNow);
