@@ -1,6 +1,5 @@
 namespace LoggingDecoratorGenerator.Tests;
 
-[UsesVerify]
 public class GeneratorSnapshotTests
 {
     [Fact]

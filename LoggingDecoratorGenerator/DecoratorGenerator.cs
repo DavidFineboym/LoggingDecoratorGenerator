@@ -48,11 +48,29 @@ public class DecoratorGenerator : IIncrementalGenerator
         var p = new Parser(compilation, context.ReportDiagnostic, context.CancellationToken);
         IReadOnlyList<DecoratorClass> decoratorClasses = p.GetDecoratorClasses(distinctInterfaces);
 
-        foreach (var decoratorClass in decoratorClasses)
+        foreach (IGrouping<string, DecoratorClass> group in decoratorClasses.GroupBy(static dc => dc.ClassName))
         {
             context.CancellationToken.ThrowIfCancellationRequested();
-            string source = SourceGenerationHelper.GenerateLoggingDecoratorClass(decoratorClass, p.StopwatchGetElapsedTimeAvailable);
-            context.AddSource(hintName: $"{decoratorClass.ClassName}.g.cs", sourceText: SourceText.From(text: source, encoding: Encoding.UTF8));
+            DecoratorClass[] groupCollection = group.ToArray();
+
+            if (groupCollection.Length == 1)
+            {
+                DecoratorClass dc = groupCollection[0];
+                AddSource(dc, dc.ClassName);
+
+                continue;
+            }
+
+            foreach (DecoratorClass dc in groupCollection)
+            {
+                AddSource(dc, $"{dc.Namespace}.{dc.ClassName}");
+            }
+        }
+
+        void AddSource(DecoratorClass decoratorClass, string fileName)
+        {
+            string source = SourceGenerationHelper.GenerateLoggingDecoratorClass(decoratorClass);
+            context.AddSource(hintName: $"{fileName}.g.cs", sourceText: SourceText.From(text: source, encoding: Encoding.UTF8));
         }
     }
 }
