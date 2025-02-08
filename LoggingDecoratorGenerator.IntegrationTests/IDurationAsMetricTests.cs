@@ -146,6 +146,9 @@ public sealed class DurationAsMetricTests : IDisposable
         using MeterListener meterListener = new();
         meterListener.InstrumentPublished = (instrument, listener) =>
         {
+            if (instrument.Name != "logging_decorator.method.duration")
+                return;
+
             Assert.Null(instrument.Meter.Tags);
             Assert.Null(instrument.Meter.Version);
 
