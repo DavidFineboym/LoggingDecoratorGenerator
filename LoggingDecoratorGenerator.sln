@@ -5,8 +5,6 @@ VisualStudioVersion = 17.5.33209.295
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fineboym.Logging.Generator", "LoggingDecoratorGenerator\Fineboym.Logging.Generator.csproj", "{AA0CEEFA-7EA0-43A4-B04C-FD299A9EB00C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoggingDecoratorGenerator.Tests", "LoggingDecoratorGenerator.Tests\LoggingDecoratorGenerator.Tests.csproj", "{CA980B33-06CB-4471-8100-6958024B5185}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoggingDecoratorGenerator.IntegrationTests", "LoggingDecoratorGenerator.IntegrationTests\LoggingDecoratorGenerator.IntegrationTests.csproj", "{2DE18598-A5D9-4A34-818A-9680890571C8}"
 EndProject
 Global
@@ -19,10 +17,6 @@ Global
 		{AA0CEEFA-7EA0-43A4-B04C-FD299A9EB00C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AA0CEEFA-7EA0-43A4-B04C-FD299A9EB00C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AA0CEEFA-7EA0-43A4-B04C-FD299A9EB00C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CA980B33-06CB-4471-8100-6958024B5185}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CA980B33-06CB-4471-8100-6958024B5185}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CA980B33-06CB-4471-8100-6958024B5185}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CA980B33-06CB-4471-8100-6958024B5185}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2DE18598-A5D9-4A34-818A-9680890571C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2DE18598-A5D9-4A34-818A-9680890571C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2DE18598-A5D9-4A34-818A-9680890571C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
