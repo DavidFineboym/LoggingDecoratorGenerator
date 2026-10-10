@@ -16,7 +16,7 @@ Use `[DecorateWithLogger]` attribute in `Fineboym.Logging.Attributes` namespace 
 
 ### Prerequisites
 
-Latest version of Visual Studio 2022.
+Requires .NET SDK 10.0.400 or later for command-line builds, or another compiler host with Roslyn 5.9 or later.
 
 ## Usage
 
