@@ -15,9 +15,9 @@ public class InformationLevelInterfaceTests
     public InformationLevelInterfaceTests()
     {
         _collector = new();
-        FakeLogger<IInformationLevelInterface> logger = new(_collector);
+        LoggerFactory loggerFactory = new(new[] { new FakeLoggerProvider(_collector) });
         _fakeService = A.Fake<IInformationLevelInterface>();
-        _decorator = new InformationLevelInterfaceLoggingDecorator(logger, _fakeService);
+        _decorator = new InformationLevelInterfaceLoggingDecorator(loggerFactory, _fakeService);
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public class InformationLevelInterfaceTests
         Assert.Equal(1514124652, firstWrite.Id.Id);
         Assert.Equal("MethodWithoutAttribute", firstWrite.Id.Name);
         Assert.Equal(LogLevel.Information, firstWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface", firstWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), firstWrite.Category);
         Assert.Equal("Entering MethodWithoutAttribute with parameters: x = 42, y = 43", firstWrite.Message);
         Assert.Null(firstWrite.Exception);
         Assert.Empty(firstWrite.Scopes);
@@ -60,7 +60,7 @@ public class InformationLevelInterfaceTests
         Assert.Equal(1514124652, lastWrite.Id.Id);
         Assert.Equal("MethodWithoutAttribute", lastWrite.Id.Name);
         Assert.Equal(LogLevel.Information, lastWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface", lastWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), lastWrite.Category);
         Assert.Equal("Method MethodWithoutAttribute returned. Result = 42.43", lastWrite.Message);
         Assert.Null(lastWrite.Exception);
         Assert.Empty(lastWrite.Scopes);
@@ -96,7 +96,7 @@ public class InformationLevelInterfaceTests
         Assert.Equal(100, firstWrite.Id.Id);
         Assert.Equal("SomePersonEventName", firstWrite.Id.Name);
         Assert.Equal(LogLevel.Debug, firstWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface", firstWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), firstWrite.Category);
         Assert.Equal("Entering MethodWithAttribute with parameters: person = Person { Name = foo, Age = 30 }, someNumber = 33", firstWrite.Message);
         Assert.Null(firstWrite.Exception);
         Assert.Empty(firstWrite.Scopes);
@@ -112,7 +112,7 @@ public class InformationLevelInterfaceTests
         Assert.Equal(100, lastWrite.Id.Id);
         Assert.Equal("SomePersonEventName", lastWrite.Id.Name);
         Assert.Equal(LogLevel.Debug, lastWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface", lastWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), lastWrite.Category);
         Assert.Equal("Method MethodWithAttribute returned. Result = Person { Name = bar, Age = 42 }", lastWrite.Message);
         Assert.Null(lastWrite.Exception);
         Assert.Empty(lastWrite.Scopes);
@@ -128,9 +128,12 @@ public class InformationLevelInterfaceTests
     public void MethodShouldNotBeLoggedBecauseOfLogLevel()
     {
         // Arrange
-        ILogger<IInformationLevelInterface> fakeLogger = A.Fake<ILogger<IInformationLevelInterface>>();
-        var decorator = new InformationLevelInterfaceLoggingDecorator(fakeLogger, _fakeService);
-        A.CallTo(() => fakeLogger.IsEnabled(LogLevel.Information)).Returns(false);
+        FakeLogger fakeLogger = new();
+        fakeLogger.ControlLevel(LogLevel.Information, enabled: false);
+        ILoggerProvider fakeProvider = A.Fake<ILoggerProvider>();
+        A.CallTo(() => fakeProvider.CreateLogger(A<string>._)).Returns(fakeLogger);
+        LoggerFactory loggerFactory = new(new[] { fakeProvider });
+        var decorator = new InformationLevelInterfaceLoggingDecorator(loggerFactory, _fakeService);
         A.CallTo(() => _fakeService.MethodShouldNotBeLoggedBecauseOfLogLevel()).DoesNothing();
 
         // Act
@@ -138,8 +141,7 @@ public class InformationLevelInterfaceTests
 
         // Assert
         A.CallTo(() => _fakeService.MethodShouldNotBeLoggedBecauseOfLogLevel()).MustHaveHappenedOnceExactly();
-        A.CallTo(() => fakeLogger.IsEnabled(LogLevel.Information)).MustHaveHappenedOnceExactly();
-        A.CallTo(fakeLogger).Where(call => call.Method.Name == nameof(ILogger.Log)).MustNotHaveHappened();
+        Assert.Empty(fakeLogger.Collector.GetSnapshot());
     }
 
     [Fact]
@@ -165,7 +167,7 @@ public class InformationLevelInterfaceTests
         Assert.Equal(1711224704, firstWrite.Id.Id);
         Assert.Equal("MethodWithMeasuredDurationAsync", firstWrite.Id.Name);
         Assert.Equal(LogLevel.Information, firstWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface", firstWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), firstWrite.Category);
         Assert.Equal("Entering MethodWithMeasuredDurationAsync with parameters: someDate = 09/28/0003", firstWrite.Message);
         Assert.Null(firstWrite.Exception);
         Assert.Empty(firstWrite.Scopes);
@@ -180,7 +182,7 @@ public class InformationLevelInterfaceTests
         Assert.Equal(1711224704, lastWrite.Id.Id);
         Assert.Equal("MethodWithMeasuredDurationAsync", lastWrite.Id.Name);
         Assert.Equal(LogLevel.Information, lastWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface", lastWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), lastWrite.Category);
         Assert.Null(lastWrite.Exception);
         Assert.Empty(lastWrite.Scopes);
         var afterWriteState = lastWrite.StructuredState;
@@ -216,7 +218,7 @@ public class InformationLevelInterfaceTests
         Assert.Equal(777, firstWrite.Id.Id);
         Assert.Equal("MethodThrowsAndLogsExceptionAsync", firstWrite.Id.Name);
         Assert.Equal(LogLevel.Information, firstWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface", firstWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), firstWrite.Category);
         Assert.Equal("Entering MethodThrowsAndLogsExceptionAsync", firstWrite.Message);
         Assert.Null(firstWrite.Exception);
         Assert.Empty(firstWrite.Scopes);
@@ -230,7 +232,7 @@ public class InformationLevelInterfaceTests
         Assert.Equal(777, lastWrite.Id.Id);
         Assert.Equal("MethodThrowsAndLogsExceptionAsync", lastWrite.Id.Name);
         Assert.Equal(LogLevel.Error, lastWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.IInformationLevelInterface", lastWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), lastWrite.Category);
         Assert.Equal("MethodThrowsAndLogsExceptionAsync failed", lastWrite.Message);
         Assert.Equal(expectedException, lastWrite.Exception);
         Assert.Empty(lastWrite.Scopes);

@@ -8,6 +8,8 @@ internal class Parameter
 
     public bool IsLogged { get; }
 
+    public bool OverridesToString { get; }
+
     public Parameter(IParameterSymbol symbol, INamedTypeSymbol notLoggedAttribute)
     {
         Symbol = symbol;
@@ -22,5 +24,7 @@ internal class Parameter
                 break;
             }
         }
+
+        OverridesToString = symbol.Type.OverridesToString();
     }
 }

@@ -1,8 +1,9 @@
 ﻿![image](https://github.com/DavidFineboym/LoggingDecoratorGenerator/actions/workflows/dotnet.yml/badge.svg?event=push)
 # Logging Decorator Source Generator
 
-Generates logger decorator class for an interface at compile time(*no runtime reflection*). Uses `Microsoft.Extensions.Logging.ILogger` to log and requires it in decorator class constructor.
+Generates logger decorator class for an interface at compile time(*no runtime reflection*). Uses `Microsoft.Extensions.Logging.ILogger` to log.
 - Logs method parameters and return value(can omit secrets from log using `[NotLoggedAttribute]`)
+- By default, omits parameter and return values whose declared types lack a custom `ToString()` override
 - Supports async methods
 - Supports log level, event id, and event name override through attribute
 - Can catch and log specific exceptions
@@ -15,7 +16,7 @@ Use `[DecorateWithLogger]` attribute in `Fineboym.Logging.Attributes` namespace 
 
 ### Prerequisites
 
-Latest version of Visual Studio 2022.
+Requires .NET SDK 10.0.400 or later for command-line builds, or another compiler host with Roslyn 5.9 or later.
 
 ## Usage
 

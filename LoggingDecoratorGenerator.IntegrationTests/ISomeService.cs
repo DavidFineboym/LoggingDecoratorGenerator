@@ -19,4 +19,8 @@ public interface ISomeService : IDisposable
 
     [return: NotLogged]
     string GetMySecretString(string username, [NotLogged] string password, int x);
+
+    IAsyncDisposable ReturnAsyncDisposable();
+
+    IAsyncEnumerable<int> ReturnAsyncEnumerable();
 }

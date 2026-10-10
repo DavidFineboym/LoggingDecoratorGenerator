@@ -62,11 +62,11 @@ internal class DecoratorClassParser
             return false;
         }
 
-        (string? interfaceLogLevel, bool measureDuration, bool durationAsMetric) = (null, false, false);
+        (string? interfaceLogLevel, bool measureDuration, bool durationAsMetric, bool skipDefaultToString) = (null, false, false, false);
         List<MethodToGenerate> methods;
         try
         {
-            (interfaceLogLevel, measureDuration, durationAsMetric) = ResolveInterfaceAttribute(interfaceSymbol);
+            (interfaceLogLevel, measureDuration, durationAsMetric, skipDefaultToString) = ResolveInterfaceAttribute(interfaceSymbol);
             if (interfaceLogLevel == null)
             {
                 return false;
@@ -81,7 +81,7 @@ internal class DecoratorClassParser
 
             foreach (INamedTypeSymbol baseInterface in interfaceSymbol.AllInterfaces)
             {
-                (string? baseInterfaceLogLevel, measureDuration, _) = ResolveInterfaceAttribute(baseInterface);
+                (string? baseInterfaceLogLevel, measureDuration, _, _) = ResolveInterfaceAttribute(baseInterface);
                 if (!TryParseMembers(baseInterface, baseInterfaceLogLevel, measureDuration, methods))
                 {
                     return false;
@@ -115,7 +115,8 @@ internal class DecoratorClassParser
             declaredAccessibility: SyntaxFacts.GetText(interfaceSymbol.DeclaredAccessibility),
             logLevel: interfaceLogLevel,
             durationAsMetric,
-            methods: methods);
+            methods: methods,
+            skipDefaultToString: skipDefaultToString);
 
         return true;
     }
@@ -216,7 +217,7 @@ internal class DecoratorClassParser
         return nameSpace;
     }
 
-    private (string? logLevel, bool measureDuration, bool durationAsMetric) ResolveInterfaceAttribute(INamedTypeSymbol interfaceSymbol)
+    private (string? logLevel, bool measureDuration, bool durationAsMetric, bool skipDefaultToString) ResolveInterfaceAttribute(INamedTypeSymbol interfaceSymbol)
     {
         foreach (AttributeData attributeData in interfaceSymbol.GetAttributes())
         {
@@ -244,6 +245,7 @@ internal class DecoratorClassParser
 
             bool measureDuration = false;
             bool reportDurationAsMetric = false;
+            bool skipDefaultToString = true;
             foreach (KeyValuePair<string, TypedConstant> arg in attributeData.NamedArguments)
             {
                 TypedConstant typedConstant = arg.Value;
@@ -260,13 +262,16 @@ internal class DecoratorClassParser
                     case Attributes.ReportDurationAsMetricName when typedConstant.Value is bool value:
                         reportDurationAsMetric = value;
                         break;
+                    case Attributes.SkipDefaultToStringName when typedConstant.Value is bool value:
+                        skipDefaultToString = value;
+                        break;
                 }
             }
 
-            return ($"global::Microsoft.Extensions.Logging.LogLevel.{LogLevelConverter.FromInt(logLevelValue)}", measureDuration, reportDurationAsMetric);
+            return ($"global::Microsoft.Extensions.Logging.LogLevel.{LogLevelConverter.FromInt(logLevelValue)}", measureDuration, reportDurationAsMetric, skipDefaultToString);
         }
 
-        return (null, false, false);
+        return (null, false, false, false);
     }
 
     private void ReportDiagnostic(DiagnosticDescriptor desc, Location? location, params object?[]? messageArgs)
@@ -295,7 +300,16 @@ internal class DecoratorClass
 
     public bool NeedsDurationAsMetric => SomeMethodMeasuresDuration && DurationAsMetric;
 
-    public DecoratorClass(string @namespace, string interfaceName, string declaredAccessibility, string logLevel, bool durationAsMetric, IReadOnlyList<MethodToGenerate> methods)
+    public bool SkipDefaultToString { get; }
+
+    public DecoratorClass(
+        string @namespace,
+        string interfaceName,
+        string declaredAccessibility,
+        string logLevel,
+        bool durationAsMetric,
+        IReadOnlyList<MethodToGenerate> methods,
+        bool skipDefaultToString)
     {
         Namespace = @namespace;
         InterfaceName = interfaceName;
@@ -305,5 +319,6 @@ internal class DecoratorClass
         Methods = methods;
         ClassName = $"{(interfaceName[0] == 'I' ? interfaceName.Substring(1) : interfaceName)}LoggingDecorator";
         SomeMethodMeasuresDuration = methods.Any(static m => m.MeasureDuration);
+        SkipDefaultToString = skipDefaultToString;
     }
 }

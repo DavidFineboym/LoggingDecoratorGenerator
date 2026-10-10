@@ -31,6 +31,9 @@ internal class MethodToGenerate
     public string? ExceptionTypeToLog { get; private set; }
 
     public string ExceptionLogLevel { get; private set; }
+
+    public bool ReturnTypeOverridesToString { get; private set; }
+
     // TODO: Refactor to MethodParser and add diagnostics for unsupported parameters- ref, out...
     public MethodToGenerate(
         IMethodSymbol methodSymbol,
@@ -121,6 +124,7 @@ internal class MethodToGenerate
             Awaitable = true;
             HasReturnValue = true;
             UnwrappedReturnType = ((INamedTypeSymbol)methodReturnType).TypeArguments[0];
+            ReturnTypeOverridesToString = UnwrappedReturnType.OverridesToString();
 
             return;
         }
@@ -135,6 +139,10 @@ internal class MethodToGenerate
 
         Awaitable = false;
         HasReturnValue = methodReturnType.SpecialType != SpecialType.System_Void;
+        if (HasReturnValue)
+        {
+            ReturnTypeOverridesToString = methodReturnType.OverridesToString();
+        }
     }
 
     /// <summary>

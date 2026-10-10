@@ -14,17 +14,20 @@ public class SomeServiceTests
     public SomeServiceTests()
     {
         _collector = new();
-        FakeLogger<ISomeService> logger = new(_collector);
+        LoggerFactory loggerFactory = new(new[] { new FakeLoggerProvider(_collector) });
         _fakeService = A.Fake<ISomeService>();
-        _decorator = new SomeServiceLoggingDecorator(logger, _fakeService);
+        _decorator = new SomeServiceLoggingDecorator(loggerFactory, _fakeService);
     }
 
     [Fact]
     public void PassThroughMethodDoesNotCallLogger()
     {
         // Arrange
-        ILogger<ISomeService> fakeLogger = A.Fake<ILogger<ISomeService>>();
-        var decorator = new SomeServiceLoggingDecorator(fakeLogger, _fakeService);
+        FakeLogger fakeLogger = new();
+        ILoggerProvider fakeProvider = A.Fake<ILoggerProvider>();
+        A.CallTo(() => fakeProvider.CreateLogger(A<string>._)).Returns(fakeLogger);
+        LoggerFactory loggerFactory = new(new[] { fakeProvider });
+        var decorator = new SomeServiceLoggingDecorator(loggerFactory, _fakeService);
         A.CallTo(() => _fakeService.Dispose()).DoesNothing();
 
         // Act
@@ -32,7 +35,7 @@ public class SomeServiceTests
 
         // Assert
         A.CallTo(() => _fakeService.Dispose()).MustHaveHappenedOnceExactly();
-        A.CallTo(fakeLogger).MustNotHaveHappened();
+        Assert.Empty(fakeLogger.Collector.GetSnapshot());
     }
 
     [Fact]
@@ -58,7 +61,7 @@ public class SomeServiceTests
         Assert.Equal(963397959, firstWrite.Id.Id);
         Assert.Equal("DateTimeReturningMethod", firstWrite.Id.Name);
         Assert.Equal(LogLevel.Debug, firstWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.ISomeService", firstWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), firstWrite.Category);
         Assert.Equal("Entering DateTimeReturningMethod with parameters: someDateTime = 12/12/2022 22:57:45", firstWrite.Message);
         Assert.Null(firstWrite.Exception);
         Assert.Empty(firstWrite.Scopes);
@@ -73,7 +76,7 @@ public class SomeServiceTests
         Assert.Equal(963397959, lastWrite.Id.Id);
         Assert.Equal("DateTimeReturningMethod", lastWrite.Id.Name);
         Assert.Equal(LogLevel.Debug, lastWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.ISomeService", lastWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), lastWrite.Category);
         Assert.Equal("Method DateTimeReturningMethod returned. Result = 09/06/2020 00:00:00", lastWrite.Message);
         Assert.Null(lastWrite.Exception);
         Assert.Empty(firstWrite.Scopes);
@@ -110,7 +113,7 @@ public class SomeServiceTests
         Assert.Equal(1921103492, firstWrite.Id.Id);
         Assert.Equal("GetMySecretString", firstWrite.Id.Name);
         Assert.Equal(LogLevel.Debug, firstWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.ISomeService", firstWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), firstWrite.Category);
         Assert.Equal("Entering GetMySecretString with parameters: username = foo, password = [REDACTED], x = 42", firstWrite.Message);
         Assert.Null(firstWrite.Exception);
         Assert.Empty(firstWrite.Scopes);
@@ -126,7 +129,7 @@ public class SomeServiceTests
         Assert.Equal(1921103492, lastWrite.Id.Id);
         Assert.Equal("GetMySecretString", lastWrite.Id.Name);
         Assert.Equal(LogLevel.Debug, lastWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.ISomeService", lastWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), lastWrite.Category);
         Assert.Equal("Method GetMySecretString returned. Result = [REDACTED]", lastWrite.Message);
         Assert.Null(lastWrite.Exception);
         Assert.Empty(firstWrite.Scopes);
@@ -160,7 +163,7 @@ public class SomeServiceTests
         Assert.Equal(0, firstWrite.Id.Id);
         Assert.Equal("StringReturningAsyncMethod", firstWrite.Id.Name);
         Assert.Equal(LogLevel.Information, firstWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.ISomeService", firstWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), firstWrite.Category);
         Assert.Equal("Entering StringReturningAsyncMethod with parameters: s = SomeInputParameter", firstWrite.Message);
         Assert.Null(firstWrite.Exception);
         Assert.Empty(firstWrite.Scopes);
@@ -175,7 +178,7 @@ public class SomeServiceTests
         Assert.Equal(0, lastWrite.Id.Id);
         Assert.Equal("StringReturningAsyncMethod", lastWrite.Id.Name);
         Assert.Equal(LogLevel.Information, lastWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.ISomeService", lastWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), lastWrite.Category);
         Assert.Equal("Method StringReturningAsyncMethod returned. Result = SomeReturnValue", lastWrite.Message);
         Assert.Null(lastWrite.Exception);
         Assert.Empty(firstWrite.Scopes);
@@ -208,7 +211,7 @@ public class SomeServiceTests
         Assert.Equal(333, firstWrite.Id.Id);
         Assert.Equal("WithIntegerParam", firstWrite.Id.Name);
         Assert.Equal(LogLevel.Debug, firstWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.ISomeService", firstWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), firstWrite.Category);
         Assert.Equal("Entering TwoMethodsWithSameName with parameters: i = 42", firstWrite.Message);
         Assert.Null(firstWrite.Exception);
         Assert.Empty(firstWrite.Scopes);
@@ -223,7 +226,7 @@ public class SomeServiceTests
         Assert.Equal(333, lastWrite.Id.Id);
         Assert.Equal("WithIntegerParam", lastWrite.Id.Name);
         Assert.Equal(LogLevel.Debug, lastWrite.Level);
-        Assert.Equal("LoggingDecoratorGenerator.IntegrationTests.ISomeService", lastWrite.Category);
+        Assert.Equal(_fakeService.GetType().ToString(), lastWrite.Category);
         Assert.Equal("Method TwoMethodsWithSameName returned", lastWrite.Message);
         Assert.Null(lastWrite.Exception);
         Assert.Empty(firstWrite.Scopes);

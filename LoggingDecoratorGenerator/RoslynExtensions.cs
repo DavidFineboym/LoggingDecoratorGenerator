@@ -7,6 +7,33 @@ internal static class RoslynExtensions
     private static readonly SymbolDisplayFormat s_symbolFormat = SymbolDisplayFormat.FullyQualifiedFormat
         .AddMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
 
+    public static bool OverridesToString(this ITypeSymbol typeSymbol)
+    {
+        for (ITypeSymbol? currentType = typeSymbol; currentType != null; currentType = currentType.BaseType)
+        {
+            if (currentType.SpecialType is SpecialType.System_Object or SpecialType.System_ValueType)
+            {
+                return false;
+            }
+
+            if (currentType.GetMembers(nameof(ToString))
+                .OfType<IMethodSymbol>()
+                .Any(static method => method.IsOverride
+                    && method.Parameters.IsDefaultOrEmpty
+                    && !method.IsGenericMethod
+                    && method.DeclaredAccessibility == Accessibility.Public
+                    && !method.IsStatic
+                    && !method.IsAbstract
+                    && !method.IsAsync
+                    && method.ReturnType.SpecialType == SpecialType.System_String))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static string ToFullyQualifiedDisplayString(this ISymbol symbol) => symbol.ToDisplayString(s_symbolFormat);
 
     // Copied from: https://github.com/dotnet/roslyn/blob/main/src/Workspaces/SharedUtilitiesAndExtensions/Compiler/Core/Extensions/CompilationExtensions.cs

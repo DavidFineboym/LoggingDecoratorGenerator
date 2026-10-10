@@ -1,8 +1,9 @@
 ![image](https://github.com/DavidFineboym/LoggingDecoratorGenerator/actions/workflows/dotnet.yml/badge.svg?event=push)
 # Logging Decorator Source Generator
 
-Generates logger decorator class for an interface at compile time(*no runtime reflection*). Uses `Microsoft.Extensions.Logging.ILogger` to log and requires it in decorator class constructor.
+Generates logger decorator class for an interface at compile time(*no runtime reflection*). Uses `Microsoft.Extensions.Logging.ILogger` to log.
 - Logs method parameters and return value(can omit secrets from log using `[NotLoggedAttribute]`)
+- By default, omits parameter and return values whose declared types lack a custom `ToString()` override
 - Supports async methods
 - Supports log level, event id, and event name override through attribute
 - Can catch and log specific exceptions
@@ -17,7 +18,7 @@ Use `[DecorateWithLogger]` attribute in `Fineboym.Logging.Attributes` namespace 
 
 ### Prerequisites
 
-Latest version of Visual Studio 2022.
+Requires .NET SDK 10.0.400 or later for command-line builds, or another compiler host with Roslyn 5.9 or later.
 
 ## Usage
 
@@ -56,17 +57,17 @@ This will create a generated class named `SomeServiceLoggingDecorator` in the sa
 
 namespace SomeFolder.SomeSubFolder
 {
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Fineboym.Logging.Generator", "1.10.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Fineboym.Logging.Generator", "2.0.0.0")]
     public sealed class SomeServiceLoggingDecorator : ISomeService
     {
-        private readonly global::Microsoft.Extensions.Logging.ILogger<ISomeService> _logger;
+        private readonly global::Microsoft.Extensions.Logging.ILogger _logger;
         private readonly ISomeService _decorated;
 
         public SomeServiceLoggingDecorator(
-            global::Microsoft.Extensions.Logging.ILogger<ISomeService> logger,
+            global::Microsoft.Extensions.Logging.ILoggerFactory loggerFactory,
             ISomeService decorated)
         {
-            _logger = logger;
+            _logger = global::Microsoft.Extensions.Logging.LoggerFactoryExtensions.CreateLogger(loggerFactory, decorated.GetType());
             _decorated = decorated;
         }
 

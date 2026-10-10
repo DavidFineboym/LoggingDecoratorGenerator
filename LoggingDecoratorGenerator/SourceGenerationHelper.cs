@@ -14,7 +14,7 @@ internal static class SourceGenerationHelper
                $"\"{typeof(SourceGenerationHelper).Assembly.GetName().Name}\", " +
                $"\"{typeof(SourceGenerationHelper).Assembly.GetName().Version}\")]";
 
-    public static string GenerateLoggingDecoratorClass(DecoratorClass decoratorClass, bool stopwatchGetElapsedTimeAvailable)
+    public static string GenerateLoggingDecoratorClass(DecoratorClass decoratorClass)
     {
         using StringWriter stringWriter = new();
         using IndentedTextWriter writer = new(stringWriter, "    ");
@@ -24,7 +24,7 @@ internal static class SourceGenerationHelper
         writer.StartBlock();
 
         string interfaceName = decoratorClass.InterfaceName;
-        string loggerType = $"global::Microsoft.Extensions.Logging.ILogger<{interfaceName}>";
+        string loggerType = $"global::Microsoft.Extensions.Logging.ILogger";
 
         writer.WriteLine(s_generatedCodeAttribute);
         writer.WriteLine($"{decoratorClass.DeclaredAccessibility} sealed class {decoratorClass.ClassName} : {interfaceName}");
@@ -37,7 +37,7 @@ internal static class SourceGenerationHelper
         }
         writer.WriteLineNoTabs(null);
 
-        AppendConstructor(writer, decoratorClass, loggerType);
+        AppendConstructor(writer, decoratorClass);
 
         foreach (MethodToGenerate methodToGenerate in decoratorClass.Methods)
         {
@@ -49,16 +49,10 @@ internal static class SourceGenerationHelper
             }
             else
             {
-                string loggerDelegateBeforeVariable = AppendLoggerMessageDefineForBeforeCall(writer, methodToGenerate);
-                string loggerDelegateAfterVariable = AppendLoggerMessageDefineForAfterCall(writer, methodToGenerate, decoratorClass.DurationAsMetric);
-                AppendMethod(writer, methodToGenerate, loggerDelegateBeforeVariable, loggerDelegateAfterVariable, stopwatchGetElapsedTimeAvailable, decoratorClass.DurationAsMetric);
+                string loggerDelegateBeforeVariable = AppendLoggerMessageDefineForBeforeCall(writer, methodToGenerate, decoratorClass.SkipDefaultToString);
+                string loggerDelegateAfterVariable = AppendLoggerMessageDefineForAfterCall(writer, methodToGenerate, decoratorClass);
+                AppendMethod(writer, methodToGenerate, loggerDelegateBeforeVariable, loggerDelegateAfterVariable, decoratorClass);
             }
-        }
-
-        if (!stopwatchGetElapsedTimeAvailable && decoratorClass.SomeMethodMeasuresDuration)
-        {
-            writer.WriteLineNoTabs(null);
-            AppendGetElapsedTimeSection(writer);
         }
 
         writer.EndBlock();
@@ -69,24 +63,11 @@ internal static class SourceGenerationHelper
         return stringWriter.ToString();
     }
 
-    private static void AppendGetElapsedTimeSection(IndentedTextWriter writer)
-    {
-        writer.WriteLine("private static readonly double s_timestampToTicks = global::System.TimeSpan.TicksPerSecond / (double)global::System.Diagnostics.Stopwatch.Frequency;");
-        writer.WriteLineNoTabs(null);
-        writer.WriteLine("private static global::System.TimeSpan __GetElapsedTime__(long startTimestamp)");
-        writer.StartBlock();
-        writer.WriteLine("var end = global::System.Diagnostics.Stopwatch.GetTimestamp();");
-        writer.WriteLine("var timestampDelta = end - startTimestamp;");
-        writer.WriteLine("var ticks = (long)(s_timestampToTicks * timestampDelta);");
-        writer.WriteLine("return new global::System.TimeSpan(ticks);");
-        writer.EndBlock();
-    }
-
-    private static void AppendConstructor(IndentedTextWriter writer, DecoratorClass decClass, string loggerType)
+    private static void AppendConstructor(IndentedTextWriter writer, DecoratorClass decClass)
     {
         writer.WriteLine($"public {decClass.ClassName}(");
         writer.Indent++;
-        writer.WriteLine($"{loggerType} logger,");
+        writer.WriteLine("global::Microsoft.Extensions.Logging.ILoggerFactory loggerFactory,");
         writer.Write($"{decClass.InterfaceName} decorated");
         if (decClass.NeedsDurationAsMetric)
         {
@@ -96,7 +77,7 @@ internal static class SourceGenerationHelper
         writer.WriteLine(")");
         writer.Indent--;
         writer.StartBlock();
-        writer.WriteLine("_logger = logger;");
+        writer.WriteLine("_logger = global::Microsoft.Extensions.Logging.LoggerFactoryExtensions.CreateLogger(loggerFactory, decorated.GetType());");
         writer.WriteLine("_decorated = decorated;");
         if (decClass.NeedsDurationAsMetric)
         {
@@ -123,16 +104,16 @@ internal static class SourceGenerationHelper
         MethodToGenerate methodToGenerate,
         string loggerDelegateBeforeVariable,
         string loggerDelegateAfterVariable,
-        bool stopwatchGetElapsedTimeAvailable,
-        bool durationAsMetric)
+        DecoratorClass decoratorClass)
     {
         IMethodSymbol method = methodToGenerate.MethodSymbol;
         bool awaitable = methodToGenerate.Awaitable;
         bool hasReturnValue = methodToGenerate.HasReturnValue;
+
         AppendMethodSignature(writer, methodToGenerate);
         writer.StartBlock();
 
-        AppendBeforeMethodSection(writer, loggerDelegateBeforeVariable, methodToGenerate, durationAsMetric);
+        AppendBeforeMethodSection(writer, loggerDelegateBeforeVariable, methodToGenerate, decoratorClass);
 
         if (methodToGenerate.ExceptionTypeToLog != null)
         {
@@ -187,7 +168,7 @@ internal static class SourceGenerationHelper
 
         writer.WriteLineNoTabs(null);
 
-        AppendAfterMethodSection(writer, loggerDelegateAfterVariable, methodToGenerate, stopwatchGetElapsedTimeAvailable, durationAsMetric);
+        AppendAfterMethodSection(writer, loggerDelegateAfterVariable, methodToGenerate, decoratorClass);
 
         writer.EndBlock();
     }
@@ -226,8 +207,9 @@ internal static class SourceGenerationHelper
         writer.WriteLine(")");
     }
 
-    private static void AppendBeforeMethodSection(IndentedTextWriter writer, string loggerDelegateBeforeVariable, MethodToGenerate method, bool durationAsMetric)
+    private static void AppendBeforeMethodSection(IndentedTextWriter writer, string loggerDelegateBeforeVariable, MethodToGenerate method, DecoratorClass decoratorClass)
     {
+        bool durationAsMetric = decoratorClass.DurationAsMetric;
         writer.WriteLine($"var {LogEnabledBoolVar} = _logger.IsEnabled({method.LogLevel});");
 
         if (method.MeasureDuration)
@@ -245,7 +227,7 @@ internal static class SourceGenerationHelper
         writer.StartBlock();
 
         writer.Write($"{loggerDelegateBeforeVariable}(_logger, ");
-        foreach (Parameter loggedParameter in method.Parameters.Where(static p => p.IsLogged))
+        foreach (Parameter loggedParameter in method.Parameters.Where(p => ShouldLogParam(p, decoratorClass.SkipDefaultToString)))
         {
             writer.Write($"{loggedParameter.Symbol.Name}, ");
         }
@@ -276,14 +258,15 @@ internal static class SourceGenerationHelper
         IndentedTextWriter writer,
         string loggerDelegateAfterVariable,
         MethodToGenerate methodToGenerate,
-        bool stopwatchGetElapsedTimeAvailable,
-        bool durationAsMetric)
+        DecoratorClass decoratorClass)
     {
+        bool durationAsMetric = decoratorClass.DurationAsMetric;
+
         if (methodToGenerate.MeasureDuration && durationAsMetric)
         {
             writer.WriteLine($"if ({DurationMetricEnabledBoolVar})");
             writer.StartBlock();
-            AppendGetElapsedTime(writer, stopwatchGetElapsedTimeAvailable);
+            AppendGetElapsedTime(writer);
             writer.WriteLine($"_methodDuration.Record({ElapsedTimeVar}.TotalSeconds,");
             writer.Indent++;
             writer.WriteLine($"new global::System.Collections.Generic.KeyValuePair<string, object?>(\"logging_decorator.method\", nameof({methodToGenerate.MethodSymbol.Name})));");
@@ -298,11 +281,12 @@ internal static class SourceGenerationHelper
         bool loggingDuration = methodToGenerate.MeasureDuration && !durationAsMetric;
         if (loggingDuration)
         {
-            AppendGetElapsedTime(writer, stopwatchGetElapsedTimeAvailable);
+            AppendGetElapsedTime(writer);
         }
 
         writer.Write($"{loggerDelegateAfterVariable}(_logger, ");
-        if (methodToGenerate.HasReturnValue && methodToGenerate.ReturnValueLogged)
+        if (methodToGenerate.HasReturnValue && methodToGenerate.ReturnValueLogged
+            && (!decoratorClass.SkipDefaultToString || methodToGenerate.ReturnTypeOverridesToString))
         {
             writer.Write("__result, ");
         }
@@ -323,16 +307,9 @@ internal static class SourceGenerationHelper
         }
     }
 
-    private static void AppendGetElapsedTime(IndentedTextWriter writer, bool stopwatchGetElapsedTimeAvailable)
+    private static void AppendGetElapsedTime(IndentedTextWriter writer)
     {
-        if (!stopwatchGetElapsedTimeAvailable)
-        {
-            writer.WriteLine($"var {ElapsedTimeVar} = __GetElapsedTime__(__startTimestamp);");
-        }
-        else
-        {
-            writer.WriteLine($"var {ElapsedTimeVar} = global::System.Diagnostics.Stopwatch.GetElapsedTime(__startTimestamp);");
-        }
+        writer.WriteLine($"var {ElapsedTimeVar} = global::System.Diagnostics.Stopwatch.GetElapsedTime(__startTimestamp);");
     }
 
     private static void StartBlock(this IndentedTextWriter writer)
@@ -353,24 +330,31 @@ internal static class SourceGenerationHelper
     /// <param name="writer"></param>
     /// <param name="method"></param>
     /// <returns>Variable name of logger delegate.</returns>
-    private static string AppendLoggerMessageDefineForBeforeCall(IndentedTextWriter writer, MethodToGenerate method)
+    private static string AppendLoggerMessageDefineForBeforeCall(IndentedTextWriter writer, MethodToGenerate method, bool skipDefaultToString)
     {
         IMethodSymbol methodSymbol = method.MethodSymbol;
         string loggerVariable = $"s_before{method.UniqueName}";
+        bool includeParams = !skipDefaultToString || method.Parameters.Any(static p => p.OverridesToString);
+
         AppendLoggerMessageDefineUpToFormatString(
             writer,
-            method.Parameters.Where(static p => p.IsLogged).Select(static p => p.Symbol.Type.ToFullyQualifiedDisplayString()).ToArray(),
+            method.Parameters.Where(p => ShouldLogParam(p, skipDefaultToString)).Select(static p => p.Symbol.Type.ToFullyQualifiedDisplayString()).ToArray(),
             loggerVariable,
             method);
+
         writer.Write($"\"Entering {methodSymbol.Name}");
-        for (int i = 0; i < method.Parameters.Count; i++)
+        if (method.Parameters.Count > 0 && includeParams)
         {
-            if (i == 0)
+            writer.Write(" with parameters: ");
+        }
+        for (int i = 0; i < method.Parameters.Count && includeParams; i++)
+        {
+            Parameter parameter = method.Parameters[i];
+            if (skipDefaultToString && !parameter.OverridesToString)
             {
-                writer.Write(" with parameters: ");
+                continue;
             }
 
-            Parameter parameter = method.Parameters[i];
             IParameterSymbol parameterSymbol = parameter.Symbol;
             if (parameter.IsLogged)
             {
@@ -381,18 +365,24 @@ internal static class SourceGenerationHelper
                 writer.Write($"{parameterSymbol.Name} = [REDACTED]");
             }
 
-            if (i < method.Parameters.Count - 1)
+            if (i < method.Parameters.Count - 1 && (!skipDefaultToString || method.Parameters.Skip(i + 1).Any(static p => p.OverridesToString)))
             {
                 writer.Write(", ");
             }
         }
+
         writer.WriteLine("\",");
         FinishByLogDefineOptions(writer);
 
         return loggerVariable;
     }
 
-    private static string AppendLoggerMessageDefineForAfterCall(IndentedTextWriter writer, MethodToGenerate methodToGenerate, bool durationAsMetric)
+    private static bool ShouldLogParam(Parameter p, bool skipDefaultToString)
+    {
+        return p.IsLogged && (!skipDefaultToString || p.OverridesToString);
+    }
+
+    private static string AppendLoggerMessageDefineForAfterCall(IndentedTextWriter writer, MethodToGenerate methodToGenerate, DecoratorClass decoratorClass)
     {
         IMethodSymbol method = methodToGenerate.MethodSymbol;
         bool hasReturnValue = methodToGenerate.HasReturnValue;
@@ -402,13 +392,16 @@ internal static class SourceGenerationHelper
 
         List<string> types = new();
 
-        if (hasReturnValue && methodToGenerate.ReturnValueLogged)
+        bool includeResultInMessage = hasReturnValue
+            && (!decoratorClass.SkipDefaultToString || methodToGenerate.ReturnTypeOverridesToString);
+        bool logReturnValue = includeResultInMessage && methodToGenerate.ReturnValueLogged;
+        if (logReturnValue)
         {
             ITypeSymbol returnType = awaitable ? methodToGenerate.UnwrappedReturnType! : method.ReturnType;
             types.Add(returnType.ToFullyQualifiedDisplayString());
         }
 
-        bool loggingDuration = methodToGenerate.MeasureDuration && !durationAsMetric;
+        bool loggingDuration = methodToGenerate.MeasureDuration && !decoratorClass.DurationAsMetric;
         if (loggingDuration)
         {
             types.Add("double?");
@@ -421,9 +414,9 @@ internal static class SourceGenerationHelper
             methodToGenerate);
 
         writer.Write($"\"Method {method.Name} returned");
-        if (hasReturnValue)
+        if (includeResultInMessage)
         {
-            if (methodToGenerate.ReturnValueLogged)
+            if (logReturnValue)
             {
                 writer.Write(". Result = {result}");
             }
