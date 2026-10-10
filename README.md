@@ -3,6 +3,7 @@
 
 Generates logger decorator class for an interface at compile time(*no runtime reflection*). Uses `Microsoft.Extensions.Logging.ILogger` to log.
 - Logs method parameters and return value(can omit secrets from log using `[NotLoggedAttribute]`)
+- By default, omits parameter and return values whose declared types lack a custom `ToString()` override
 - Supports async methods
 - Supports log level, event id, and event name override through attribute
 - Can catch and log specific exceptions

@@ -7,6 +7,7 @@ internal static class Attributes
     public const string DecorateWithLoggerName = "DecorateWithLoggerAttribute";
     public const string DecorateWithLoggerFullName = $"{Namespace}.{DecorateWithLoggerName}";
     public const string ReportDurationAsMetricName = "ReportDurationAsMetric";
+    public const string SkipDefaultToStringName = "SkipDefaultToString";
     public const string DecorateWithLogger = $$"""
         #nullable enable
         namespace {{Namespace}}
@@ -32,6 +33,14 @@ internal static class Attributes
                 /// <see href="https://learn.microsoft.com/en-us/dotnet/core/diagnostics/metrics-collection">Collect metrics</see>.
                 /// </summary>
                 public bool {{ReportDurationAsMetricName}} { get; set; }
+
+                /// <summary>
+                /// If set to <see langword="true"/>, parameters and return values without a concrete custom or inherited <see cref="object.ToString()"/> override are omitted from log messages and structured state.
+                /// The default is <see langword="true"/>. Set to <see langword="false"/> to preserve the previous logging behavior.
+                /// Detection uses the declared type at compile time, not the runtime value. Task and ValueTask results are checked using their result type.
+                /// This works independently from <see cref="{{NotLoggedName}}"/>, which replaces specific parameters or return values with "[REDACTED]".
+                /// </summary>
+                public bool {{SkipDefaultToStringName}} { get; set; } = true;
 
                 public {{DecorateWithLoggerName}}(Microsoft.Extensions.Logging.LogLevel level = Microsoft.Extensions.Logging.LogLevel.Debug)
                 {
@@ -97,6 +106,12 @@ internal static class Attributes
         #nullable enable
         namespace {{Namespace}}
         {
+            /// <summary>
+            /// Specifies that the parameter or return value should not be logged, replacing its value with "[REDACTED]". Parameter name is still logged.
+            /// If <see cref="{{DecorateWithLoggerName}}.{{SkipDefaultToStringName}}"/> is set to <see langword="true"/> and the object lacks a custom <see cref="object.ToString()"/> override,
+            /// then the parameter or return value is omitted entirely and its name will not appear in logs.
+            /// This attribute is best used for sensitive data or PII to ensure it never shows up in log output.
+            /// </summary>
             [System.AttributeUsage(System.AttributeTargets.Parameter | System.AttributeTargets.ReturnValue, AllowMultiple = false, Inherited = true)]
             internal sealed class {{NotLoggedName}} : System.Attribute
             {
